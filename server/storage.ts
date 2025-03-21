@@ -13,7 +13,13 @@ import {
   type InsertOrder,
   orderItems,
   type OrderItem,
-  type InsertOrderItem
+  type InsertOrderItem,
+  franchises,
+  type Franchise,
+  type InsertFranchise,
+  inventory,
+  type Inventory,
+  type InsertInventory
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, lt, desc, sql as sqlBuilder, and, inArray } from "drizzle-orm";
@@ -24,6 +30,12 @@ import { neon } from "@neondatabase/serverless";
 const PostgresSessionStore = connectPg(session);
 
 export interface IStorage {
+  // Franchise operations
+  getFranchises(): Promise<Franchise[]>;
+  getFranchise(id: number): Promise<Franchise | undefined>;
+  createFranchise(franchise: InsertFranchise): Promise<Franchise>;
+  updateFranchise(id: number, franchise: Partial<InsertFranchise>): Promise<Franchise | undefined>;
+  
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
@@ -54,15 +66,19 @@ export interface IStorage {
   getOrdersWithDetails(): Promise<any[]>;
   getOrderDetails(id: number): Promise<any>;
   
+  // Inventory operations
+  getInventoryByFranchise(franchiseId: number): Promise<Inventory[]>;
+  updateInventory(franchiseId: number, productId: number, quantity: number): Promise<Inventory | undefined>;
+  
   // Dashboard statistics
-  getDashboardStats(): Promise<any>;
+  getDashboardStats(franchiseId?: number): Promise<any>;
   
   // Session store
-  sessionStore: session.SessionStore;
+  sessionStore: session.Store;
 }
 
 export class DatabaseStorage implements IStorage {
-  sessionStore: session.SessionStore;
+  sessionStore: session.Store;
 
   constructor() {
     // Create session store
@@ -72,6 +88,33 @@ export class DatabaseStorage implements IStorage {
       },
       createTableIfMissing: true,
     });
+  }
+
+  // Franchise operations
+  async getFranchises(): Promise<Franchise[]> {
+    return db.select().from(franchises).orderBy(franchises.name);
+  }
+
+  async getFranchise(id: number): Promise<Franchise | undefined> {
+    const [franchise] = await db.select().from(franchises).where(eq(franchises.id, id));
+    return franchise;
+  }
+
+  async createFranchise(franchise: InsertFranchise): Promise<Franchise> {
+    const [newFranchise] = await db
+      .insert(franchises)
+      .values(franchise)
+      .returning();
+    return newFranchise;
+  }
+
+  async updateFranchise(id: number, franchise: Partial<InsertFranchise>): Promise<Franchise | undefined> {
+    const [updatedFranchise] = await db
+      .update(franchises)
+      .set({ ...franchise, updatedAt: new Date() })
+      .where(eq(franchises.id, id))
+      .returning();
+    return updatedFranchise;
   }
 
   // User operations
@@ -99,7 +142,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getProduct(id: number): Promise<Product | undefined> {
-    const [product] = await db.select().from(products).where(eq(products.id, id));
+    const [product] = await db.select().from(products).where(eq(products.prCode, id));
     return product;
   }
 
@@ -114,8 +157,8 @@ export class DatabaseStorage implements IStorage {
   async updateProduct(id: number, product: Partial<InsertProduct>): Promise<Product | undefined> {
     const [updatedProduct] = await db
       .update(products)
-      .set({ ...product, updatedAt: new Date() })
-      .where(eq(products.id, id))
+      .set(product)
+      .where(eq(products.prCode, id))
       .returning();
     return updatedProduct;
   }
@@ -123,8 +166,8 @@ export class DatabaseStorage implements IStorage {
   async deleteProduct(id: number): Promise<boolean> {
     const result = await db
       .delete(products)
-      .where(eq(products.id, id))
-      .returning({ id: products.id });
+      .where(eq(products.prCode, id))
+      .returning({ prCode: products.prCode });
     return result.length > 0;
   }
 
@@ -133,15 +176,17 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(products)
       .where(
-        sqlBuilder`${products.stock} <= ${products.lowStockThreshold}`
+        sqlBuilder`${products.stockQuantity} <= 10`
       )
-      .orderBy(products.stock)
+      .orderBy(products.stockQuantity)
       .limit(limit);
   }
 
   // Customer operations
   async getCustomers(): Promise<Customer[]> {
-    return db.select().from(customers).orderBy(customers.name);
+    return db.select()
+      .from(customers)
+      .orderBy(customers.lastName);
   }
 
   async getCustomer(id: number): Promise<Customer | undefined> {
@@ -215,7 +260,7 @@ export class DatabaseStorage implements IStorage {
         const product = await this.getProduct(item.productId);
         if (product) {
           await this.updateProduct(item.productId, {
-            stock: product.stock - item.quantity
+            stockQuantity: product.stockQuantity - item.quantity
           });
         }
       }
@@ -243,7 +288,8 @@ export class DatabaseStorage implements IStorage {
 
   async getOrdersWithDetails(): Promise<any[]> {
     const result = await db.execute(sqlBuilder`
-      SELECT o.id, o.status, o.total, o.created_at, c.name as customer_name, c.email as customer_email
+      SELECT o.id, o.status, o.final_amount, o.created_at, 
+             c.first_name || ' ' || c.last_name as customer_name, c.email as customer_email
       FROM ${orders} o
       JOIN ${customers} c ON o.customer_id = c.id
       ORDER BY o.created_at DESC
@@ -253,8 +299,8 @@ export class DatabaseStorage implements IStorage {
 
   async getOrderDetails(id: number): Promise<any> {
     const orderResult = await db.execute(sqlBuilder`
-      SELECT o.id, o.status, o.total, o.created_at, 
-             c.id as customer_id, c.name as customer_name, c.email as customer_email
+      SELECT o.id, o.status, o.total_amount, o.discount_amount, o.tax_amount, o.final_amount, o.created_at, 
+             c.id as customer_id, c.first_name || ' ' || c.last_name as customer_name, c.email as customer_email
       FROM ${orders} o
       JOIN ${customers} c ON o.customer_id = c.id
       WHERE o.id = ${id}
@@ -267,10 +313,10 @@ export class DatabaseStorage implements IStorage {
     const order = orderResult.rows[0];
     
     const itemsResult = await db.execute(sqlBuilder`
-      SELECT oi.id, oi.quantity, oi.price, oi.subtotal,
-             p.id as product_id, p.name as product_name, p.sku as product_sku
+      SELECT oi.id, oi.quantity, oi.unit_price, oi.discount, oi.tax_rate, oi.tax_amount, oi.total_amount,
+             p.pr_code as product_id, p.name as product_name, p.packing as product_packing
       FROM ${orderItems} oi
-      JOIN ${products} p ON oi.product_id = p.id
+      JOIN ${products} p ON oi.product_id = p.pr_code
       WHERE oi.order_id = ${id}
     `);
     
@@ -280,23 +326,94 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
+  // Inventory operations
+  async getInventoryByFranchise(franchiseId: number): Promise<Inventory[]> {
+    return db
+      .select()
+      .from(inventory)
+      .where(eq(inventory.franchiseId, franchiseId))
+      .orderBy(desc(inventory.updatedAt));
+  }
+
+  async updateInventory(franchiseId: number, productId: number, quantity: number): Promise<Inventory | undefined> {
+    const [existingInventory] = await db
+      .select()
+      .from(inventory)
+      .where(
+        and(
+          eq(inventory.franchiseId, franchiseId),
+          eq(inventory.productId, productId)
+        )
+      );
+
+    if (existingInventory) {
+      const [updatedInventory] = await db
+        .update(inventory)
+        .set({ 
+          stockQuantity: quantity,
+          updatedAt: new Date()
+        })
+        .where(
+          and(
+            eq(inventory.franchiseId, franchiseId),
+            eq(inventory.productId, productId)
+          )
+        )
+        .returning();
+      return updatedInventory;
+    } else {
+      const [newInventory] = await db
+        .insert(inventory)
+        .values({
+          franchiseId,
+          productId,
+          stockQuantity: quantity
+        })
+        .returning();
+      return newInventory;
+    }
+  }
+
   // Dashboard statistics
-  async getDashboardStats(): Promise<any> {
-    const totalOrdersResult = await db.execute(sqlBuilder`SELECT COUNT(*) as count FROM ${orders}`);
-    const totalOrdersCount = parseInt(totalOrdersResult.rows[0].count, 10);
+  async getDashboardStats(franchiseId?: number): Promise<any> {
+    let whereClause = '';
+    if (franchiseId) {
+      whereClause = `WHERE o.franchise_id = ${franchiseId}`;
+    }
     
-    const totalRevenueResult = await db.execute(sqlBuilder`SELECT SUM(total) as sum FROM ${orders}`);
-    const totalRevenue = parseFloat(totalRevenueResult.rows[0].sum) || 0;
+    const totalOrdersResult = await db.execute(sqlBuilder`
+      SELECT COUNT(*) as count FROM ${orders} o ${sqlBuilder.raw(whereClause)}
+    `);
+    const totalOrdersCount = parseInt(totalOrdersResult.rows[0]?.count || '0', 10);
     
-    const customersCountResult = await db.execute(sqlBuilder`SELECT COUNT(*) as count FROM ${customers}`);
-    const customersCount = parseInt(customersCountResult.rows[0].count, 10);
+    const totalRevenueResult = await db.execute(sqlBuilder`
+      SELECT SUM(final_amount) as sum FROM ${orders} o ${sqlBuilder.raw(whereClause)}
+    `);
+    const totalRevenue = parseFloat(totalRevenueResult.rows[0]?.sum || '0') || 0;
+    
+    let customerWhereClause = '';
+    if (franchiseId) {
+      customerWhereClause = `WHERE franchise_id = ${franchiseId}`;
+    }
+    
+    const customersCountResult = await db.execute(sqlBuilder`
+      SELECT COUNT(*) as count FROM ${customers} ${sqlBuilder.raw(customerWhereClause)}
+    `);
+    const customersCount = parseInt(customersCountResult.rows[0]?.count || '0', 10);
+    
+    let inventoryWhereClause = '';
+    if (franchiseId) {
+      inventoryWhereClause = `WHERE franchise_id = ${franchiseId} AND stock_quantity <= 10`;
+    } else {
+      inventoryWhereClause = `WHERE stock_quantity <= 10`;
+    }
     
     const lowStockItemsResult = await db.execute(sqlBuilder`
       SELECT COUNT(*) as count 
-      FROM ${products} 
-      WHERE stock <= low_stock_threshold
+      FROM ${inventory} 
+      ${sqlBuilder.raw(inventoryWhereClause)}
     `);
-    const lowStockItemsCount = parseInt(lowStockItemsResult.rows[0].count, 10);
+    const lowStockItemsCount = parseInt(lowStockItemsResult.rows[0]?.count || '0', 10);
     
     return {
       totalOrders: totalOrdersCount,
