@@ -46,21 +46,29 @@ export function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
-  // Create default admin user at startup
-  storage.getUserByUsername('admin').then(async adminUser => {
-    if (!adminUser) {
-      await storage.createUser({
-        username: 'admin',
-        password: await hashPassword('password123'),
-        email: 'admin@example.com',
-        firstName: 'Admin',
-        lastName: 'User',
-        role: 'admin',
-        isActive: true
-      });
-      console.log('Admin user created');
+  // Initialize admin user
+  const initAdmin = async () => {
+    try {
+      const adminUser = await storage.getUserByUsername('admin');
+      if (!adminUser) {
+        const hashedPassword = await hashPassword('password123');
+        await storage.createUser({
+          username: 'admin',
+          password: hashedPassword,
+          email: 'admin@example.com',
+          firstName: 'Admin',
+          lastName: 'User',
+          role: 'admin',
+          isActive: true
+        });
+        console.log('Admin user created successfully');
+      }
+    } catch (error) {
+      console.error('Error creating admin:', error);
     }
-  });
+  };
+  
+  initAdmin();
 
   passport.use(
     new LocalStrategy(async (username, password, done) => {
@@ -97,19 +105,6 @@ export function setupAuth(app: Express) {
 
   app.post("/api/register", async (req, res, next) => {
     try {
-      // Create default admin if it doesn't exist
-      const adminUser = await storage.getUserByUsername('admin');
-      if (!adminUser) {
-        await storage.createUser({
-          username: 'admin',
-          password: await hashPassword('password123'),
-          email: 'admin@example.com',
-          firstName: 'Admin',
-          lastName: 'User',
-          role: 'admin',
-          isActive: true
-        });
-      }
 
       if (!req.body.username || !req.body.password || !req.body.fullName || !req.body.email) {
         return res.status(400).json({ message: "Missing required fields" });
