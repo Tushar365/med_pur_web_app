@@ -44,7 +44,9 @@ const registrationFormSchema = z.object({
 });
 
 export default function AuthPage() {
-  const [activeTab, setActiveTab] = useState<string>("login");
+  const [activeTab, setActiveTab] = useState("login");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const { user, loginMutation, registerMutation } = useAuth();
   const [, navigate] = useLocation();
 
@@ -125,7 +127,7 @@ export default function AuthPage() {
               <TabsTrigger value="login">Login</TabsTrigger>
               <TabsTrigger value="register">Register</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="login">
               <Card>
                 <CardHeader>
@@ -141,7 +143,7 @@ export default function AuthPage() {
                     <p className="mt-1"><strong>Username:</strong> admin</p>
                     <p><strong>Password:</strong> password123</p>
                   </div>
-                
+
                   <Form {...loginForm}>
                     <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
                       <FormField
@@ -169,7 +171,10 @@ export default function AuthPage() {
                             <FormControl>
                               <div className="relative">
                                 <KeyRound className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                                <Input type="password" placeholder="Your password" className="pl-8" {...field} />
+                                <Input type={showPassword ? "text" : "password"} placeholder="Your password" className="pl-8" {...field} />
+                                <button onClick={() => setShowPassword(!showPassword)} className="absolute right-2 top-1/2 -translate-y-1/2">
+                                  {showPassword ? "Hide" : "Show"}
+                                </button>
                               </div>
                             </FormControl>
                             <FormMessage />
@@ -193,7 +198,7 @@ export default function AuthPage() {
                 </CardFooter>
               </Card>
             </TabsContent>
-            
+
             <TabsContent value="register">
               <Card>
                 <CardHeader>
@@ -277,7 +282,10 @@ export default function AuthPage() {
                             <FormControl>
                               <div className="relative">
                                 <KeyRound className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                                <Input type="password" placeholder="Create a password" className="pl-8" {...field} />
+                                <Input type={showRegisterPassword ? "text" : "password"} placeholder="Create a password" className="pl-8" {...field} />
+                                <button onClick={() => setShowRegisterPassword(!showRegisterPassword)} className="absolute right-2 top-1/2 -translate-y-1/2">
+                                  {showRegisterPassword ? "Hide" : "Show"}
+                                </button>
                               </div>
                             </FormControl>
                             <FormMessage />

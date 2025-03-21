@@ -2,8 +2,7 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Express } from "express";
 import session from "express-session";
-import { scrypt, randomBytes, timingSafeEqual } from "crypto";
-import { promisify } from "util";
+import bcrypt from "bcrypt";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
 
@@ -13,19 +12,13 @@ declare global {
   }
 }
 
-const scryptAsync = promisify(scrypt);
-
 async function hashPassword(password: string) {
-  const salt = randomBytes(16).toString("hex");
-  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
-  return `${buf.toString("hex")}.${salt}`;
+  const salt = await bcrypt.genSalt(10);
+  return bcrypt.hash(password, salt);
 }
 
 async function comparePasswords(supplied: string, stored: string) {
-  const [hashed, salt] = stored.split(".");
-  const hashedBuf = Buffer.from(hashed, "hex");
-  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  return timingSafeEqual(hashedBuf, suppliedBuf);
+  return bcrypt.compare(supplied, stored);
 }
 
 export function setupAuth(app: Express) {
@@ -46,16 +39,55 @@ export function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
+  // Initialize admin user
+  const initAdmin = async () => {
+    try {
+      let adminUser = await storage.getUserByUsername('admin');
+      if (!adminUser) {
+        const hashedPassword = await bcrypt.hash('password123', 10);
+        await storage.createUser({
+          username: 'admin',
+          password: hashedPassword,
+          email: 'admin@example.com',
+          firstName: 'Admin',
+          lastName: 'User',
+          role: 'admin',
+          isActive: true
+        });
+        console.log('Admin user created successfully');
+      } else {
+        // Update existing admin password
+        const hashedPassword = await bcrypt.hash('password123', 10);
+        await storage.updateUser(adminUser.id, {
+          password: hashedPassword
+        });
+        console.log('Admin password updated');
+      }
+    } catch (error) {
+      console.error('Error managing admin:', error);
+    }
+  };
+  
+  initAdmin();
+
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
         const user = await storage.getUserByUsername(username);
-        if (!user || !(await comparePasswords(password, user.password))) {
+        if (!user) {
+          console.log('User not found:', username);
           return done(null, false);
-        } else {
-          return done(null, user);
         }
+        
+        const isValid = await comparePasswords(password, user.password);
+        if (!isValid) {
+          console.log('Invalid password for user:', username);
+          return done(null, false);
+        }
+        
+        return done(null, user);
       } catch (error) {
+        console.error('Auth error:', error);
         return done(error);
       }
     }),
@@ -73,6 +105,7 @@ export function setupAuth(app: Express) {
 
   app.post("/api/register", async (req, res, next) => {
     try {
+
       if (!req.body.username || !req.body.password || !req.body.fullName || !req.body.email) {
         return res.status(400).json({ message: "Missing required fields" });
       }
