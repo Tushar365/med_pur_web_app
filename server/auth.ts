@@ -46,6 +46,22 @@ export function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
+  // Create default admin user at startup
+  storage.getUserByUsername('admin').then(async adminUser => {
+    if (!adminUser) {
+      await storage.createUser({
+        username: 'admin',
+        password: await hashPassword('password123'),
+        email: 'admin@example.com',
+        firstName: 'Admin',
+        lastName: 'User',
+        role: 'admin',
+        isActive: true
+      });
+      console.log('Admin user created');
+    }
+  });
+
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
