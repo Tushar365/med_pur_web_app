@@ -213,7 +213,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { order, items } = req.body;
       
       const validatedOrder = insertOrderSchema.parse(order);
-      const validatedItems = z.array(insertOrderItemSchema.omit({ orderId: true })).parse(items);
+      
+      // Items will be processed in the storage layer to add orderId
+      const validatedItemsSchema = z.array(
+        insertOrderItemSchema.omit({ orderId: true })
+      );
+      
+      const validatedItems = validatedItemsSchema.parse(items);
       
       const newOrder = await storage.createOrder(validatedOrder, validatedItems);
       res.status(201).json(newOrder);

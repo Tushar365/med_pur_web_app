@@ -60,7 +60,7 @@ export interface IStorage {
   // Order operations
   getOrders(): Promise<Order[]>;
   getOrder(id: number): Promise<Order | undefined>;
-  createOrder(order: InsertOrder, items: InsertOrderItem[]): Promise<Order>;
+  createOrder(order: InsertOrder, items: Omit<InsertOrderItem, 'orderId'>[]): Promise<Order>;
   updateOrderStatus(id: number, status: string): Promise<Order | undefined>;
   getRecentOrders(limit?: number): Promise<Order[]>;
   getOrdersWithDetails(): Promise<any[]>;
@@ -237,7 +237,7 @@ export class DatabaseStorage implements IStorage {
     return order;
   }
 
-  async createOrder(order: InsertOrder, items: InsertOrderItem[]): Promise<Order> {
+  async createOrder(order: InsertOrder, items: Omit<InsertOrderItem, 'orderId'>[]): Promise<Order> {
     // Start a transaction
     // This is a simplified version as proper transaction handling would require a more complex setup
     const [newOrder] = await db
@@ -249,7 +249,7 @@ export class DatabaseStorage implements IStorage {
       const itemsWithOrderId = items.map(item => ({
         ...item,
         orderId: newOrder.id
-      }));
+      })) as InsertOrderItem[];
       
       await db
         .insert(orderItems)
@@ -376,44 +376,57 @@ export class DatabaseStorage implements IStorage {
 
   // Dashboard statistics
   async getDashboardStats(franchiseId?: number): Promise<any> {
-    let whereClause = '';
+    let totalOrdersResult;
     if (franchiseId) {
-      whereClause = `WHERE o.franchise_id = ${franchiseId}`;
-    }
-    
-    const totalOrdersResult = await db.execute(sqlBuilder`
-      SELECT COUNT(*) as count FROM ${orders} o ${sqlBuilder.raw(whereClause)}
-    `);
-    const totalOrdersCount = parseInt(totalOrdersResult.rows[0]?.count || '0', 10);
-    
-    const totalRevenueResult = await db.execute(sqlBuilder`
-      SELECT SUM(final_amount) as sum FROM ${orders} o ${sqlBuilder.raw(whereClause)}
-    `);
-    const totalRevenue = parseFloat(totalRevenueResult.rows[0]?.sum || '0') || 0;
-    
-    let customerWhereClause = '';
-    if (franchiseId) {
-      customerWhereClause = `WHERE franchise_id = ${franchiseId}`;
-    }
-    
-    const customersCountResult = await db.execute(sqlBuilder`
-      SELECT COUNT(*) as count FROM ${customers} ${sqlBuilder.raw(customerWhereClause)}
-    `);
-    const customersCount = parseInt(customersCountResult.rows[0]?.count || '0', 10);
-    
-    let inventoryWhereClause = '';
-    if (franchiseId) {
-      inventoryWhereClause = `WHERE franchise_id = ${franchiseId} AND stock_quantity <= 10`;
+      totalOrdersResult = await db.execute(sqlBuilder`
+        SELECT COUNT(*) as count FROM ${orders} o WHERE o.franchise_id = ${franchiseId}
+      `);
     } else {
-      inventoryWhereClause = `WHERE stock_quantity <= 10`;
+      totalOrdersResult = await db.execute(sqlBuilder`
+        SELECT COUNT(*) as count FROM ${orders}
+      `);
     }
+    const totalOrdersCount = parseInt(totalOrdersResult.rows[0]?.count?.toString() || '0', 10);
     
-    const lowStockItemsResult = await db.execute(sqlBuilder`
-      SELECT COUNT(*) as count 
-      FROM ${inventory} 
-      ${sqlBuilder.raw(inventoryWhereClause)}
-    `);
-    const lowStockItemsCount = parseInt(lowStockItemsResult.rows[0]?.count || '0', 10);
+    let totalRevenueResult;
+    if (franchiseId) {
+      totalRevenueResult = await db.execute(sqlBuilder`
+        SELECT SUM(final_amount) as sum FROM ${orders} WHERE franchise_id = ${franchiseId}
+      `);
+    } else {
+      totalRevenueResult = await db.execute(sqlBuilder`
+        SELECT SUM(final_amount) as sum FROM ${orders}
+      `);
+    }
+    const totalRevenue = parseFloat(totalRevenueResult.rows[0]?.sum?.toString() || '0') || 0;
+    
+    let customersCountResult;
+    if (franchiseId) {
+      customersCountResult = await db.execute(sqlBuilder`
+        SELECT COUNT(*) as count FROM ${customers} WHERE franchise_id = ${franchiseId}
+      `);
+    } else {
+      customersCountResult = await db.execute(sqlBuilder`
+        SELECT COUNT(*) as count FROM ${customers}
+      `);
+    }
+    const customersCount = parseInt(customersCountResult.rows[0]?.count?.toString() || '0', 10);
+    
+    let lowStockItemsResult;
+    if (franchiseId) {
+      lowStockItemsResult = await db.execute(sqlBuilder`
+        SELECT COUNT(*) as count 
+        FROM ${inventory} 
+        WHERE franchise_id = ${franchiseId} AND stock_quantity <= 10
+      `);
+    } else {
+      lowStockItemsResult = await db.execute(sqlBuilder`
+        SELECT COUNT(*) as count 
+        FROM ${inventory} 
+        WHERE stock_quantity <= 10
+      `);
+    }
+    const lowStockItemsCount = parseInt(lowStockItemsResult.rows[0]?.count?.toString() || '0', 10);
     
     return {
       totalOrders: totalOrdersCount,

@@ -13,7 +13,14 @@ import { useLocation } from "wouter";
 export default function DashboardPage() {
   const [, navigate] = useLocation();
   
-  const { data: stats, isLoading: isStatsLoading } = useQuery({
+  interface DashboardStats {
+    totalOrders: number;
+    revenue: number;
+    customers: number;
+    lowStockItems: number;
+  }
+  
+  const { data: stats, isLoading: isStatsLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/dashboard/stats"],
   });
 
@@ -59,7 +66,9 @@ export default function DashboardPage() {
             <StatsCard 
               title="Revenue"
               value={isStatsLoading ? "Loading..." : formatCurrency(stats?.revenue || 0)}
-              icon={<DollarSign className="h-5 w-5 text-teal-500" />}
+              icon={<svg className="h-5 w-5 text-teal-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8 10.5h8m-4-2v7m-4 0h4.5c1.5 0 3-1 3-3 0-1.5-1-3-3-3H9.5c-1 0-1.5.5-1.5 1v1c0 .5.5 1 1.5 1H12" />
+              </svg>}
               iconBgColor="bg-teal-50"
               changeValue={12.3}
               changeLabel="vs last month"

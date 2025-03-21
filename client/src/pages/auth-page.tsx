@@ -89,10 +89,15 @@ export default function AuthPage() {
         <div className="w-full max-w-md">
           <div className="mb-8 text-center">
             <div className="inline-flex items-center mb-4">
-              <div className="w-10 h-10 rounded-md bg-primary flex items-center justify-center text-white">
-                <Pill className="h-6 w-6" />
+              <div className="w-12 h-12 rounded-md bg-primary flex items-center justify-center text-white p-2">
+                <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2L7 6V18L12 22L17 18V6L12 2Z" fill="currentColor" />
+                  <path d="M12 6V12M9 9H15" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+                  <path d="M8 16H16" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+                  <path d="M10 19H14" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
               </div>
-              <h1 className="ml-3 text-2xl font-bold text-gray-900">PharmaFlow</h1>
+              <h1 className="ml-3 text-2xl font-bold text-gray-900">MedSync</h1>
             </div>
             <h2 className="text-3xl font-bold tracking-tight text-gray-900">
               Welcome to PharmaFlow
@@ -117,6 +122,13 @@ export default function AuthPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
+                  <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md text-blue-800 text-sm">
+                    <p className="font-medium mb-1">Development Environment</p>
+                    <p>You can register a new account or use these demo credentials:</p>
+                    <p className="mt-1"><strong>Username:</strong> admin</p>
+                    <p><strong>Password:</strong> password123</p>
+                  </div>
+                
                   <Form {...loginForm}>
                     <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
                       <FormField
