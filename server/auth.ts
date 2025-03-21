@@ -73,7 +73,7 @@ export function setupAuth(app: Express) {
 
   app.post("/api/register", async (req, res, next) => {
     try {
-      if (!req.body.username || !req.body.password || !req.body.fullName) {
+      if (!req.body.username || !req.body.password || !req.body.fullName || !req.body.email) {
         return res.status(400).json({ message: "Missing required fields" });
       }
 
@@ -82,16 +82,26 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ message: "Username already exists" });
       }
 
-      const user = await storage.createUser({
-        ...req.body,
+      // Create a properly formatted user object
+      const userData = {
+        username: req.body.username,
         password: await hashPassword(req.body.password),
-      });
+        email: req.body.email,
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        role: req.body.role || 'staff',
+        franchiseId: req.body.franchiseId || null,
+        isActive: req.body.isActive !== undefined ? req.body.isActive : true
+      };
+
+      const user = await storage.createUser(userData);
 
       req.login(user, (err) => {
         if (err) return next(err);
         res.status(201).json(user);
       });
     } catch (error) {
+      console.error("Registration error:", error);
       next(error);
     }
   });
