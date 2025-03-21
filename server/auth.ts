@@ -42,9 +42,9 @@ export function setupAuth(app: Express) {
   // Initialize admin user
   const initAdmin = async () => {
     try {
-      const adminUser = await storage.getUserByUsername('admin');
+      let adminUser = await storage.getUserByUsername('admin');
       if (!adminUser) {
-        const hashedPassword = await hashPassword('password123');
+        const hashedPassword = await bcrypt.hash('password123', 10);
         await storage.createUser({
           username: 'admin',
           password: hashedPassword,
@@ -55,9 +55,16 @@ export function setupAuth(app: Express) {
           isActive: true
         });
         console.log('Admin user created successfully');
+      } else {
+        // Update existing admin password
+        const hashedPassword = await bcrypt.hash('password123', 10);
+        await storage.updateUser(adminUser.id, {
+          password: hashedPassword
+        });
+        console.log('Admin password updated');
       }
     } catch (error) {
-      console.error('Error creating admin:', error);
+      console.error('Error managing admin:', error);
     }
   };
   
