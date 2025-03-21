@@ -1,277 +1,250 @@
-# Database Migrations Guide for MedSync
+# Database Migration Guide for MedSync
 
-This document explains how to manage database schema changes (migrations) in the MedSync application using Drizzle ORM.
+This guide provides instructions for managing database migrations in the MedSync application.
 
-## Understanding Migrations
+## Overview
 
-Database migrations are a controlled way to evolve your database schema over time. They allow you to:
+MedSync uses Drizzle ORM for database schema management. This approach utilizes a schema-first development model where you define your schema in TypeScript and then push the changes to your database.
 
-- Add new tables, columns, or indices
-- Modify existing database structures
-- Remove outdated database elements
-- Keep your database schema in sync with your application code
+## Migration Workflow
 
-## Migration Strategy in MedSync
+### 1. Update Schema Definition
 
-MedSync uses Drizzle ORM's "push" approach for database migrations, which:
+First, modify the schema definition in `shared/schema.ts`. This is where you define your tables, columns, relationships, and types.
 
-1. Compares your schema definition to the current database state
-2. Generates and executes the necessary SQL to align the database with your schema
-3. Preserves existing data when possible
+Example of adding a new column to an existing table:
 
-This approach is simple and works well for development and small to medium-sized applications.
-
-## Migration Files and Structure
-
-In MedSync, the database schema is defined in:
-
-```
-shared/schema.ts
+```typescript
+// shared/schema.ts
+export const products = pgTable("products", {
+  // Existing columns...
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  
+  // New column
+  batch_number: text("batch_number"),
+});
 ```
 
-This file contains:
-- Table definitions using `pgTable`
-- Column definitions with data types and constraints
-- Relationship definitions using the `relations` function
-- Insert schemas using `createInsertSchema`
-- Type definitions for TypeScript integration
+### 2. Generate Migration Files (Optional)
 
-## Running Migrations
-
-### Basic Migration (Development)
-
-To update your database schema to match the current schema definition:
-
-```bash
-npm run db:push
-```
-
-This command will:
-1. Read your schema definition from `shared/schema.ts`
-2. Compare it with the current database state
-3. Generate and execute the necessary SQL to update the database
-
-### Checking Pending Migrations
-
-To see what changes would be made without actually applying them:
+While MedSync primarily uses the push approach for simplicity, you can generate SQL migration files for more control:
 
 ```bash
 npm run db:generate
 ```
 
-This will show a preview of the SQL that would be generated to update your database.
+This command uses Drizzle Kit to compare your schema with the database and generate migration files in the `drizzle` folder.
 
-## Migration Best Practices
+### 3. Push Schema Changes
 
-### Before Making Schema Changes
+To apply your schema changes directly to the database:
 
-1. **Backup your database**:
-   ```bash
-   pg_dump -U postgres medsync > medsync_backup.sql
-   ```
+```bash
+npm run db:push
+```
 
-2. **Run in development first**:
-   Test all migrations in a development environment before applying to production.
+This command will update your database schema to match the definition in `shared/schema.ts`.
 
-### When Making Schema Changes
+## Important Considerations
 
-1. **Be incremental**:
-   Make small, targeted changes rather than large schema overhauls.
+### Data Safety
 
-2. **Handle data preservation**:
-   When renaming or restructuring columns, ensure your migration preserves existing data.
+- The `db:push` command can be destructive. It may drop columns or tables when they are removed from the schema.
+- For production environments, consider using the migration-based approach with `db:generate` and then manually reviewing the migrations before applying them.
 
-3. **Consider constraints**:
-   Think about how new constraints might affect existing data.
+### Schema Validation
 
-4. **Test both ways**:
-   Ensure your schema changes work for both new and existing installations.
+Before applying migrations to production:
 
-## Production Migration Workflow
-
-For production deployments, follow this workflow:
-
-1. **Maintenance mode**:
-   Consider putting your application in maintenance mode during migration.
-
-2. **Backup**:
-   Always backup your production database before migration.
-   ```bash
-   pg_dump -h [railway-host] -U [username] -d [dbname] > prod_backup_[date].sql
-   ```
-
-3. **Dry run**:
-   Use `npm run db:generate` to preview changes.
-
-4. **Apply migration**:
-   Run `npm run db:push` to apply the changes.
-
-5. **Verify**:
-   Check that the application works correctly with the new schema.
+1. Test migrations on a staging environment first
+2. Back up the production database before applying migrations
+3. Schedule migrations during low-traffic periods
 
 ## Common Migration Scenarios
 
 ### Adding a New Table
 
-1. Add your table definition to `shared/schema.ts`:
-   ```typescript
-   export const suppliers = pgTable("suppliers", {
-     id: serial("id").primaryKey(),
-     name: text("name").notNull(),
-     contactName: text("contact_name"),
-     phone: text("phone"),
-     email: text("email"),
-     address: text("address"),
-     franchiseId: integer("franchise_id").references(() => franchises.id),
-     createdAt: timestamp("created_at").defaultNow(),
-     updatedAt: timestamp("updated_at").defaultNow(),
-   });
-   ```
-
-2. Add relations if needed:
-   ```typescript
-   export const suppliersRelations = relations(suppliers, ({ one, many }) => ({
-     franchise: one(franchises, {
-       fields: [suppliers.franchiseId],
-       references: [franchises.id],
-     }),
-     products: many(products),
-   }));
-   ```
-
-3. Add insert schema and type definitions:
-   ```typescript
-   export const insertSupplierSchema = createInsertSchema(suppliers).pick({
-     name: true,
-     contactName: true,
-     phone: true,
-     email: true,
-     address: true,
-     franchiseId: true,
-   });
-   
-   export type Supplier = typeof suppliers.$inferSelect;
-   export type InsertSupplier = z.infer<typeof insertSupplierSchema>;
-   ```
-
-4. Run migration:
-   ```bash
-   npm run db:push
-   ```
-
-### Adding a New Column
-
-1. Modify the table definition in `shared/schema.ts`:
-   ```typescript
-   export const products = pgTable("products", {
-     // Existing fields...
-     supplierInfo: text("supplier_info"), // New field
-   });
-   ```
-
-2. Update the insert schema:
-   ```typescript
-   export const insertProductSchema = createInsertSchema(products).pick({
-     // Existing fields...
-     supplierInfo: true, // New field
-   });
-   ```
-
-3. Run migration:
-   ```bash
-   npm run db:push
-   ```
-
-### Renaming a Column
-
-Drizzle doesn't directly support column renaming through schema comparison. Instead, you'll need to:
-
-1. Add the new column
-2. Copy data from the old column to the new column
-3. Remove the old column
-
-Example process:
+1. Define the new table in `shared/schema.ts`:
 
 ```typescript
-// 1. Add new column first
-export const products = pgTable("products", {
-  // Existing fields...
-  manufacturerName: text("manufacturer_name"), // New name
-  manufacturer: text("manufacturer"), // Old name (keep for now)
+export const suppliers = pgTable("suppliers", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  contact_person: text("contact_person"),
+  phone: text("phone").notNull(),
+  email: text("email"),
+  address: text("address"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
 });
 
-// After migration and data copying:
-export const products = pgTable("products", {
+// Add the schema to insertSchema and type exports
+export const insertSupplierSchema = createInsertSchema(suppliers).pick({
+  name: true,
+  contact_person: true,
+  phone: true,
+  email: true,
+  address: true,
+});
+
+export type Supplier = typeof suppliers.$inferSelect;
+export type InsertSupplier = z.infer<typeof insertSupplierSchema>;
+```
+
+2. Push the changes:
+
+```bash
+npm run db:push
+```
+
+### Adding a Column to an Existing Table
+
+1. Update the table definition in `shared/schema.ts`:
+
+```typescript
+export const customers = pgTable("customers", {
+  // Existing columns...
+  
+  // New column
+  preferred_communication: text("preferred_communication").default("phone"),
+});
+
+// Update the insert schema too
+export const insertCustomerSchema = createInsertSchema(customers).pick({
   // Existing fields...
-  manufacturerName: text("manufacturer_name"), 
-  // manufacturer field removed
+  preferred_communication: true,
 });
 ```
 
-The data copying step would need to be done with a custom SQL script.
+2. Push the changes:
 
-### Changing Column Types
+```bash
+npm run db:push
+```
 
-Be careful when changing column types as it might cause data loss:
+### Renaming a Column (Two-Step Process)
 
-1. For safe conversions (e.g., varchar to text):
-   ```typescript
-   // Change from:
-   someField: varchar("some_field", { length: 255 }),
-   // To:
-   someField: text("some_field"),
-   ```
+Drizzle doesn't directly support renaming columns in the schema-push approach. You'll need to:
 
-2. For potentially unsafe conversions (e.g., text to integer):
-   First validate that all data can be converted correctly using a database query.
+1. Add the new column:
+
+```typescript
+export const products = pgTable("products", {
+  // Existing columns...
+  price: numeric("price", { precision: 10, scale: 2 }).notNull(),
+  // New column with the desired name
+  mrp: numeric("mrp", { precision: 10, scale: 2 }).notNull().default("0"),
+});
+```
+
+2. Push the changes:
+
+```bash
+npm run db:push
+```
+
+3. Write a data migration script to copy data from the old column to the new one:
+
+```typescript
+import { db } from '@/server/db';
+import { products } from '@/shared/schema';
+
+// Copy data from price to mrp
+await db.execute(sql`UPDATE products SET mrp = price WHERE mrp = 0`);
+```
+
+4. Remove the old column from the schema:
+
+```typescript
+export const products = pgTable("products", {
+  // Existing columns...
+  // price: numeric("price", { precision: 10, scale: 2 }).notNull(), // Removed
+  mrp: numeric("mrp", { precision: 10, scale: 2 }).notNull(),
+});
+```
+
+5. Push the changes again:
+
+```bash
+npm run db:push
+```
+
+### Adding a Relationship Between Tables
+
+1. Define the relationship in `shared/schema.ts`:
+
+```typescript
+// First, ensure both tables have the necessary columns
+export const products = pgTable("products", {
+  // Existing columns...
+  supplier_id: integer("supplier_id").references(() => suppliers.id),
+});
+
+// Then, define the relationship
+export const productsRelations = relations(products, ({ one }) => ({
+  supplier: one(suppliers, {
+    fields: [products.supplier_id],
+    references: [suppliers.id],
+  }),
+}));
+
+export const suppliersRelations = relations(suppliers, ({ many }) => ({
+  products: many(products),
+}));
+```
+
+2. Push the changes:
+
+```bash
+npm run db:push
+```
 
 ## Troubleshooting Migrations
 
-### Migration Fails to Apply
+### Schema Push Fails
 
-If `db:push` fails:
+If `db:push` fails with errors:
 
-1. Check the error message for specific issues
-2. Verify that your schema definition is valid
-3. Ensure your database connection is working
-4. Check for constraint violations in existing data
+1. Check for conflicting schema changes
+2. Verify database connection and permissions
+3. Consider using a custom migration script for complex changes
 
-### Data Inconsistencies After Migration
+### Data Type Conflicts
 
-If you notice data issues after migration:
+When changing column types:
 
-1. Restore from backup if needed
-2. Write a data correction script to fix specific issues
-3. Consider a more careful migration approach for that specific change
+1. Consider creating a new column with the desired type
+2. Migrate data with appropriate conversions
+3. Remove the old column after data is migrated
 
-## Advanced Migration Topics
+### Foreign Key Constraints
 
-### Custom SQL Migrations
+When adding foreign keys:
 
-For complex migrations that can't be handled by schema comparison:
+1. Ensure the referenced table and column exist
+2. Check that there are no existing records that would violate the constraint
+3. For existing data, clean up or update records before adding the constraint
 
-1. Create a SQL script with your custom migration:
-   ```sql
-   -- migrations/custom-migration.sql
-   UPDATE products SET price = price * 1.05 WHERE category = 'antibiotics';
-   ```
+## Verifying Migrations
 
-2. Execute the script against your database:
-   ```bash
-   psql -U postgres -d medsync -f migrations/custom-migration.sql
-   ```
+After applying migrations, verify your schema:
 
-### Railway PostgreSQL Considerations
+1. Inspect the database schema:
 
-When using Railway for your PostgreSQL database:
+```bash
+npm run db:studio
+```
 
-1. Migrations work the same way, just ensure your `DATABASE_URL` points to your Railway database
-2. Railway may have connection limitations - use a stable connection for migrations
-3. Always backup before migrating a Railway database
+2. Run tests that interact with the affected parts of the database
+3. Manually test the application functionality that uses the updated schema
+
+## Conclusion
+
+Following this guide will help you safely manage database schema changes in your MedSync application. Remember to always back up your database before applying migrations to production environments.
 
 ## Next Steps
 
-After understanding how to manage database migrations, you might want to:
-
-1. Review the [Database Schema Overview](./schema.md) for a comprehensive understanding of the data structure
-2. Explore the [API Endpoints Documentation](../api/endpoints.md) to understand how the application interacts with the database
+- Learn more about [Drizzle ORM](https://orm.drizzle.team/)
+- Explore [Drizzle Kit](https://orm.drizzle.team/kit-docs/overview) for more advanced migration workflows
+- Consider adding automated testing for your database schema

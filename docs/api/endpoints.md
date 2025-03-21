@@ -1,70 +1,67 @@
-# MedSync API Endpoints Documentation
+# MedSync API Documentation
 
-This document provides comprehensive documentation for all API endpoints in the MedSync application, including request formats, response structures, and authentication requirements.
-
-## Base URL
-
-All API endpoints are relative to the base URL of your deployment:
-
-- **Development**: `http://localhost:3000/api`
-- **Production**: `https://your-domain.com/api`
+This document provides details on all available API endpoints in the MedSync application.
 
 ## Authentication
 
-Most endpoints require authentication using session cookies. To authenticate:
+### Register a new user
 
-1. Call the `/api/login` endpoint with valid credentials
-2. The server will set a session cookie in the response
-3. Include this cookie in subsequent requests
-
-### Authentication Endpoints
-
-#### Register a New User
-
-```
-POST /api/register
-```
+- **URL**: `/api/register`
+- **Method**: `POST`
+- **Auth required**: No
+- **Permissions required**: None
 
 **Request Body:**
+
 ```json
 {
-  "firstName": "John",
-  "lastName": "Doe",
+  "first_name": "John",
+  "last_name": "Doe",
   "username": "johndoe",
   "password": "securepassword",
   "email": "john.doe@example.com",
-  "role": "staff",
-  "franchiseId": 1
+  "role": "manager",
+  "franchise_id": 1
 }
 ```
 
-**Response (201 Created):**
+**Success Response:**
+
+- **Code**: 201 Created
+- **Content**:
+
 ```json
 {
   "id": 1,
-  "firstName": "John",
-  "lastName": "Doe",
+  "first_name": "John",
+  "last_name": "Doe",
   "username": "johndoe",
   "email": "john.doe@example.com",
-  "role": "staff",
-  "franchiseId": 1,
-  "isActive": true,
-  "createdAt": "2023-06-01T12:00:00Z",
-  "updatedAt": "2023-06-01T12:00:00Z"
+  "role": "manager",
+  "franchise_id": 1
 }
 ```
 
-**Possible Errors:**
-- `400 Bad Request`: Username already exists or invalid input
-- `500 Internal Server Error`: Server error
+**Error Response:**
 
-#### Login
+- **Code**: 400 Bad Request
+- **Content**:
 
+```json
+{
+  "error": "Username already exists"
+}
 ```
-POST /api/login
-```
+
+### Login
+
+- **URL**: `/api/login`
+- **Method**: `POST`
+- **Auth required**: No
+- **Permissions required**: None
 
 **Request Body:**
+
 ```json
 {
   "username": "johndoe",
@@ -72,1164 +69,1177 @@ POST /api/login
 }
 ```
 
-**Response (200 OK):**
+**Success Response:**
+
+- **Code**: 200 OK
+- **Content**:
+
 ```json
 {
   "id": 1,
-  "firstName": "John",
-  "lastName": "Doe",
+  "first_name": "John",
+  "last_name": "Doe",
   "username": "johndoe",
   "email": "john.doe@example.com",
-  "role": "staff",
-  "franchiseId": 1,
-  "isActive": true,
-  "createdAt": "2023-06-01T12:00:00Z",
-  "updatedAt": "2023-06-01T12:00:00Z",
-  "lastLogin": "2023-06-02T10:30:00Z"
+  "role": "manager",
+  "franchise_id": 1
 }
 ```
 
-**Possible Errors:**
-- `401 Unauthorized`: Invalid username or password
-- `500 Internal Server Error`: Server error
+**Error Response:**
 
-#### Logout
+- **Code**: 401 Unauthorized
+- **Content**: None
 
-```
-POST /api/logout
-```
+### Logout
 
-**Request Body:** None
+- **URL**: `/api/logout`
+- **Method**: `POST`
+- **Auth required**: Yes
+- **Permissions required**: None
 
-**Response (200 OK):**
-```json
-{}
-```
+**Success Response:**
 
-#### Get Current User
+- **Code**: 200 OK
+- **Content**: None
 
-```
-GET /api/user
-```
+### Get current user
 
-**Response (200 OK):**
+- **URL**: `/api/user`
+- **Method**: `GET`
+- **Auth required**: Yes
+- **Permissions required**: None
+
+**Success Response:**
+
+- **Code**: 200 OK
+- **Content**:
+
 ```json
 {
   "id": 1,
-  "firstName": "John",
-  "lastName": "Doe",
+  "first_name": "John",
+  "last_name": "Doe",
   "username": "johndoe",
   "email": "john.doe@example.com",
-  "role": "staff",
-  "franchiseId": 1,
-  "isActive": true,
-  "createdAt": "2023-06-01T12:00:00Z",
-  "updatedAt": "2023-06-01T12:00:00Z",
-  "lastLogin": "2023-06-02T10:30:00Z"
+  "role": "manager",
+  "franchise_id": 1
 }
 ```
 
-**Possible Errors:**
-- `401 Unauthorized`: User not logged in
+**Error Response:**
 
-## Franchise Management
+- **Code**: 401 Unauthorized
+- **Content**: None
 
-### Get All Franchises
+## Franchises
 
-```
-GET /api/franchises
-```
+### Get all franchises
 
-**Authentication Required:** Yes
+- **URL**: `/api/franchises`
+- **Method**: `GET`
+- **Auth required**: Yes
+- **Permissions required**: None
 
-**Response (200 OK):**
+**Success Response:**
+
+- **Code**: 200 OK
+- **Content**:
+
 ```json
 [
   {
     "id": 1,
     "name": "Main Branch",
-    "address": "123 Healthcare Street, Mumbai",
-    "contactNumber": "+91 9876543210",
+    "address": "123 Medical Street, New Delhi",
+    "contact_number": "+91 9876543210",
     "email": "main@medsync.com",
-    "isActive": true,
-    "createdAt": "2023-05-01T10:00:00Z",
-    "updatedAt": "2023-05-01T10:00:00Z"
-  },
-  {
-    "id": 2,
-    "name": "North Mumbai Branch",
-    "address": "456 Medical Avenue, Mumbai",
-    "contactNumber": "+91 9876543211",
-    "email": "north@medsync.com",
-    "isActive": true,
-    "createdAt": "2023-05-02T11:00:00Z",
-    "updatedAt": "2023-05-02T11:00:00Z"
+    "is_active": true,
+    "created_at": "2023-01-01T00:00:00.000Z",
+    "updated_at": "2023-01-01T00:00:00.000Z"
   }
 ]
 ```
 
-### Get Franchise by ID
+### Get a specific franchise
 
-```
-GET /api/franchises/:id
-```
+- **URL**: `/api/franchises/:id`
+- **Method**: `GET`
+- **Auth required**: Yes
+- **Permissions required**: None
+- **URL Parameters**: id=[integer] franchise ID
 
-**Authentication Required:** Yes
+**Success Response:**
 
-**URL Parameters:**
-- `id`: ID of the franchise to retrieve
+- **Code**: 200 OK
+- **Content**:
 
-**Response (200 OK):**
 ```json
 {
   "id": 1,
   "name": "Main Branch",
-  "address": "123 Healthcare Street, Mumbai",
-  "contactNumber": "+91 9876543210",
+  "address": "123 Medical Street, New Delhi",
+  "contact_number": "+91 9876543210",
   "email": "main@medsync.com",
-  "isActive": true,
-  "createdAt": "2023-05-01T10:00:00Z",
-  "updatedAt": "2023-05-01T10:00:00Z"
+  "is_active": true,
+  "created_at": "2023-01-01T00:00:00.000Z",
+  "updated_at": "2023-01-01T00:00:00.000Z"
 }
 ```
 
-**Possible Errors:**
-- `404 Not Found`: Franchise not found
+**Error Response:**
 
-### Create Franchise
+- **Code**: 404 Not Found
+- **Content**:
 
+```json
+{
+  "error": "Franchise not found"
+}
 ```
-POST /api/franchises
-```
 
-**Authentication Required:** Yes (Admin role)
+### Create a franchise
+
+- **URL**: `/api/franchises`
+- **Method**: `POST`
+- **Auth required**: Yes
+- **Permissions required**: Admin
 
 **Request Body:**
+
 ```json
 {
-  "name": "South Mumbai Branch",
-  "address": "789 Pharmacy Road, Mumbai",
-  "contactNumber": "+91 9876543212",
-  "email": "south@medsync.com",
-  "isActive": true
+  "name": "New Branch",
+  "address": "456 Pharmacy Road, Mumbai",
+  "contact_number": "+91 9876543211",
+  "email": "mumbai@medsync.com"
 }
 ```
 
-**Response (201 Created):**
-```json
-{
-  "id": 3,
-  "name": "South Mumbai Branch",
-  "address": "789 Pharmacy Road, Mumbai",
-  "contactNumber": "+91 9876543212",
-  "email": "south@medsync.com",
-  "isActive": true,
-  "createdAt": "2023-06-05T14:30:00Z",
-  "updatedAt": "2023-06-05T14:30:00Z"
-}
-```
+**Success Response:**
 
-**Possible Errors:**
-- `400 Bad Request`: Invalid input
-- `401 Unauthorized`: Not logged in
-- `403 Forbidden`: Not an admin
-- `500 Internal Server Error`: Server error
+- **Code**: 201 Created
+- **Content**:
 
-### Update Franchise
-
-```
-PATCH /api/franchises/:id
-```
-
-**Authentication Required:** Yes (Admin role)
-
-**URL Parameters:**
-- `id`: ID of the franchise to update
-
-**Request Body:**
-```json
-{
-  "name": "South Mumbai Main Branch",
-  "contactNumber": "+91 9876543213",
-  "isActive": true
-}
-```
-
-**Response (200 OK):**
-```json
-{
-  "id": 3,
-  "name": "South Mumbai Main Branch",
-  "address": "789 Pharmacy Road, Mumbai",
-  "contactNumber": "+91 9876543213",
-  "email": "south@medsync.com",
-  "isActive": true,
-  "createdAt": "2023-06-05T14:30:00Z",
-  "updatedAt": "2023-06-05T15:45:00Z"
-}
-```
-
-**Possible Errors:**
-- `400 Bad Request`: Invalid input
-- `401 Unauthorized`: Not logged in
-- `403 Forbidden`: Not an admin
-- `404 Not Found`: Franchise not found
-- `500 Internal Server Error`: Server error
-
-## Product Management
-
-### Get All Products
-
-```
-GET /api/products
-```
-
-**Authentication Required:** Yes
-
-**Query Parameters:**
-- `franchiseId` (optional): Filter products by franchise
-
-**Response (200 OK):**
-```json
-[
-  {
-    "id": 1,
-    "name": "Paracetamol 500mg",
-    "description": "Pain reliever and fever reducer",
-    "manufacturer": "ABC Pharmaceuticals",
-    "category": "Analgesics",
-    "price": 45.00,
-    "gstRate": 12.00,
-    "hsnCode": "30049099",
-    "reorderLevel": 50,
-    "franchiseId": 1,
-    "createdAt": "2023-05-15T09:00:00Z",
-    "updatedAt": "2023-05-15T09:00:00Z"
-  },
-  {
-    "id": 2,
-    "name": "Amoxicillin 250mg",
-    "description": "Antibiotic medication",
-    "manufacturer": "XYZ Pharma",
-    "category": "Antibiotics",
-    "price": 120.00,
-    "gstRate": 5.00,
-    "hsnCode": "30041010",
-    "reorderLevel": 30,
-    "franchiseId": 1,
-    "createdAt": "2023-05-15T09:30:00Z",
-    "updatedAt": "2023-05-15T09:30:00Z"
-  }
-]
-```
-
-### Get Product by ID
-
-```
-GET /api/products/:id
-```
-
-**Authentication Required:** Yes
-
-**URL Parameters:**
-- `id`: ID of the product to retrieve
-
-**Response (200 OK):**
-```json
-{
-  "id": 1,
-  "name": "Paracetamol 500mg",
-  "description": "Pain reliever and fever reducer",
-  "manufacturer": "ABC Pharmaceuticals",
-  "category": "Analgesics",
-  "price": 45.00,
-  "gstRate": 12.00,
-  "hsnCode": "30049099",
-  "reorderLevel": 50,
-  "franchiseId": 1,
-  "createdAt": "2023-05-15T09:00:00Z",
-  "updatedAt": "2023-05-15T09:00:00Z"
-}
-```
-
-**Possible Errors:**
-- `404 Not Found`: Product not found
-
-### Create Product
-
-```
-POST /api/products
-```
-
-**Authentication Required:** Yes
-
-**Request Body:**
-```json
-{
-  "name": "Cetrizine 10mg",
-  "description": "Antihistamine for allergies",
-  "manufacturer": "Pharma India Ltd",
-  "category": "Antihistamines",
-  "price": 35.00,
-  "gstRate": 5.00,
-  "hsnCode": "30049099",
-  "reorderLevel": 40,
-  "franchiseId": 1
-}
-```
-
-**Response (201 Created):**
-```json
-{
-  "id": 3,
-  "name": "Cetrizine 10mg",
-  "description": "Antihistamine for allergies",
-  "manufacturer": "Pharma India Ltd",
-  "category": "Antihistamines",
-  "price": 35.00,
-  "gstRate": 5.00,
-  "hsnCode": "30049099",
-  "reorderLevel": 40,
-  "franchiseId": 1,
-  "createdAt": "2023-06-10T11:15:00Z",
-  "updatedAt": "2023-06-10T11:15:00Z"
-}
-```
-
-**Possible Errors:**
-- `400 Bad Request`: Invalid input
-- `401 Unauthorized`: Not logged in
-- `500 Internal Server Error`: Server error
-
-### Update Product
-
-```
-PATCH /api/products/:id
-```
-
-**Authentication Required:** Yes
-
-**URL Parameters:**
-- `id`: ID of the product to update
-
-**Request Body:**
-```json
-{
-  "price": 38.50,
-  "reorderLevel": 45
-}
-```
-
-**Response (200 OK):**
-```json
-{
-  "id": 3,
-  "name": "Cetrizine 10mg",
-  "description": "Antihistamine for allergies",
-  "manufacturer": "Pharma India Ltd",
-  "category": "Antihistamines",
-  "price": 38.50,
-  "gstRate": 5.00,
-  "hsnCode": "30049099",
-  "reorderLevel": 45,
-  "franchiseId": 1,
-  "createdAt": "2023-06-10T11:15:00Z",
-  "updatedAt": "2023-06-10T12:30:00Z"
-}
-```
-
-**Possible Errors:**
-- `400 Bad Request`: Invalid input
-- `401 Unauthorized`: Not logged in
-- `404 Not Found`: Product not found
-- `500 Internal Server Error`: Server error
-
-### Delete Product
-
-```
-DELETE /api/products/:id
-```
-
-**Authentication Required:** Yes (Admin or Manager role)
-
-**URL Parameters:**
-- `id`: ID of the product to delete
-
-**Response (200 OK):**
-```json
-{
-  "success": true
-}
-```
-
-**Possible Errors:**
-- `401 Unauthorized`: Not logged in
-- `403 Forbidden`: Insufficient permissions
-- `404 Not Found`: Product not found
-- `500 Internal Server Error`: Server error
-
-### Get Low Stock Products
-
-```
-GET /api/products/low-stock?limit=5
-```
-
-**Authentication Required:** Yes
-
-**Query Parameters:**
-- `limit` (optional): Maximum number of products to return (default: 10)
-- `franchiseId` (optional): Filter by franchise
-
-**Response (200 OK):**
-```json
-[
-  {
-    "id": 2,
-    "name": "Amoxicillin 250mg",
-    "description": "Antibiotic medication",
-    "manufacturer": "XYZ Pharma",
-    "category": "Antibiotics",
-    "price": 120.00,
-    "gstRate": 5.00,
-    "hsnCode": "30041010",
-    "reorderLevel": 30,
-    "franchiseId": 1,
-    "inventory": {
-      "quantity": 25
-    },
-    "createdAt": "2023-05-15T09:30:00Z",
-    "updatedAt": "2023-05-15T09:30:00Z"
-  }
-]
-```
-
-## Customer Management
-
-### Get All Customers
-
-```
-GET /api/customers
-```
-
-**Authentication Required:** Yes
-
-**Query Parameters:**
-- `franchiseId` (optional): Filter customers by franchise
-
-**Response (200 OK):**
-```json
-[
-  {
-    "id": 1,
-    "firstName": "Rajesh",
-    "lastName": "Kumar",
-    "email": "rajesh.kumar@example.com",
-    "phone": "+91 9876123456",
-    "address": "45 Residential Lane, Mumbai",
-    "franchiseId": 1,
-    "createdAt": "2023-05-20T10:00:00Z",
-    "updatedAt": "2023-05-20T10:00:00Z"
-  },
-  {
-    "id": 2,
-    "firstName": "Priya",
-    "lastName": "Sharma",
-    "email": "priya.sharma@example.com",
-    "phone": "+91 9876123457",
-    "address": "78 Park Avenue, Mumbai",
-    "franchiseId": 1,
-    "createdAt": "2023-05-20T11:30:00Z",
-    "updatedAt": "2023-05-20T11:30:00Z"
-  }
-]
-```
-
-### Get Customer by ID
-
-```
-GET /api/customers/:id
-```
-
-**Authentication Required:** Yes
-
-**URL Parameters:**
-- `id`: ID of the customer to retrieve
-
-**Response (200 OK):**
-```json
-{
-  "id": 1,
-  "firstName": "Rajesh",
-  "lastName": "Kumar",
-  "email": "rajesh.kumar@example.com",
-  "phone": "+91 9876123456",
-  "address": "45 Residential Lane, Mumbai",
-  "franchiseId": 1,
-  "createdAt": "2023-05-20T10:00:00Z",
-  "updatedAt": "2023-05-20T10:00:00Z"
-}
-```
-
-**Possible Errors:**
-- `404 Not Found`: Customer not found
-
-### Create Customer
-
-```
-POST /api/customers
-```
-
-**Authentication Required:** Yes
-
-**Request Body:**
-```json
-{
-  "firstName": "Ananya",
-  "lastName": "Patel",
-  "email": "ananya.patel@example.com",
-  "phone": "+91 9876123458",
-  "address": "123 Urban Heights, Mumbai",
-  "franchiseId": 1
-}
-```
-
-**Response (201 Created):**
-```json
-{
-  "id": 3,
-  "firstName": "Ananya",
-  "lastName": "Patel",
-  "email": "ananya.patel@example.com",
-  "phone": "+91 9876123458",
-  "address": "123 Urban Heights, Mumbai",
-  "franchiseId": 1,
-  "createdAt": "2023-06-15T14:00:00Z",
-  "updatedAt": "2023-06-15T14:00:00Z"
-}
-```
-
-**Possible Errors:**
-- `400 Bad Request`: Invalid input
-- `401 Unauthorized`: Not logged in
-- `500 Internal Server Error`: Server error
-
-### Update Customer
-
-```
-PATCH /api/customers/:id
-```
-
-**Authentication Required:** Yes
-
-**URL Parameters:**
-- `id`: ID of the customer to update
-
-**Request Body:**
-```json
-{
-  "phone": "+91 9876123459",
-  "address": "124 Urban Heights, Mumbai"
-}
-```
-
-**Response (200 OK):**
-```json
-{
-  "id": 3,
-  "firstName": "Ananya",
-  "lastName": "Patel",
-  "email": "ananya.patel@example.com",
-  "phone": "+91 9876123459",
-  "address": "124 Urban Heights, Mumbai",
-  "franchiseId": 1,
-  "createdAt": "2023-06-15T14:00:00Z",
-  "updatedAt": "2023-06-15T15:30:00Z"
-}
-```
-
-**Possible Errors:**
-- `400 Bad Request`: Invalid input
-- `401 Unauthorized`: Not logged in
-- `404 Not Found`: Customer not found
-- `500 Internal Server Error`: Server error
-
-### Delete Customer
-
-```
-DELETE /api/customers/:id
-```
-
-**Authentication Required:** Yes
-
-**URL Parameters:**
-- `id`: ID of the customer to delete
-
-**Response (200 OK):**
-```json
-{
-  "success": true
-}
-```
-
-**Possible Errors:**
-- `401 Unauthorized`: Not logged in
-- `404 Not Found`: Customer not found
-- `500 Internal Server Error`: Server error
-
-### Get Recent Customers
-
-```
-GET /api/customers/recent?limit=5
-```
-
-**Authentication Required:** Yes
-
-**Query Parameters:**
-- `limit` (optional): Maximum number of customers to return (default: 5)
-- `franchiseId` (optional): Filter by franchise
-
-**Response (200 OK):**
-```json
-[
-  {
-    "id": 3,
-    "firstName": "Ananya",
-    "lastName": "Patel",
-    "email": "ananya.patel@example.com",
-    "phone": "+91 9876123459",
-    "address": "124 Urban Heights, Mumbai",
-    "franchiseId": 1,
-    "createdAt": "2023-06-15T14:00:00Z",
-    "updatedAt": "2023-06-15T15:30:00Z"
-  },
-  {
-    "id": 2,
-    "firstName": "Priya",
-    "lastName": "Sharma",
-    "email": "priya.sharma@example.com",
-    "phone": "+91 9876123457",
-    "address": "78 Park Avenue, Mumbai",
-    "franchiseId": 1,
-    "createdAt": "2023-05-20T11:30:00Z",
-    "updatedAt": "2023-05-20T11:30:00Z"
-  }
-]
-```
-
-## Order Management
-
-### Get All Orders
-
-```
-GET /api/orders
-```
-
-**Authentication Required:** Yes
-
-**Query Parameters:**
-- `franchiseId` (optional): Filter orders by franchise
-
-**Response (200 OK):**
-```json
-[
-  {
-    "id": 1,
-    "customerId": 1,
-    "userId": 1,
-    "franchiseId": 1,
-    "total": 240.80,
-    "status": "completed",
-    "orderDate": "2023-06-01T13:00:00Z",
-    "createdAt": "2023-06-01T13:00:00Z",
-    "updatedAt": "2023-06-01T13:30:00Z"
-  },
-  {
-    "id": 2,
-    "customerId": 2,
-    "userId": 1,
-    "franchiseId": 1,
-    "total": 134.40,
-    "status": "processing",
-    "orderDate": "2023-06-10T15:00:00Z",
-    "createdAt": "2023-06-10T15:00:00Z",
-    "updatedAt": "2023-06-10T15:10:00Z"
-  }
-]
-```
-
-### Get Order by ID
-
-```
-GET /api/orders/:id
-```
-
-**Authentication Required:** Yes
-
-**URL Parameters:**
-- `id`: ID of the order to retrieve
-
-**Response (200 OK):**
-```json
-{
-  "id": 1,
-  "customerId": 1,
-  "userId": 1,
-  "franchiseId": 1,
-  "total": 240.80,
-  "status": "completed",
-  "orderDate": "2023-06-01T13:00:00Z",
-  "createdAt": "2023-06-01T13:00:00Z",
-  "updatedAt": "2023-06-01T13:30:00Z"
-}
-```
-
-**Possible Errors:**
-- `404 Not Found`: Order not found
-
-### Create Order
-
-```
-POST /api/orders
-```
-
-**Authentication Required:** Yes
-
-**Request Body:**
-```json
-{
-  "customerId": 3,
-  "userId": 1,
-  "franchiseId": 1,
-  "orderItems": [
-    {
-      "productId": 1,
-      "quantity": 2,
-      "price": 45.00
-    },
-    {
-      "productId": 3,
-      "quantity": 1,
-      "price": 38.50
-    }
-  ]
-}
-```
-
-**Response (201 Created):**
-```json
-{
-  "id": 3,
-  "customerId": 3,
-  "userId": 1,
-  "franchiseId": 1,
-  "total": 143.92,
-  "status": "pending",
-  "orderDate": "2023-06-20T10:00:00Z",
-  "createdAt": "2023-06-20T10:00:00Z",
-  "updatedAt": "2023-06-20T10:00:00Z",
-  "orderItems": [
-    {
-      "id": 5,
-      "orderId": 3,
-      "productId": 1,
-      "quantity": 2,
-      "price": 45.00,
-      "total": 100.80
-    },
-    {
-      "id": 6,
-      "orderId": 3,
-      "productId": 3,
-      "quantity": 1,
-      "price": 38.50,
-      "total": 40.43
-    }
-  ]
-}
-```
-
-**Possible Errors:**
-- `400 Bad Request`: Invalid input
-- `401 Unauthorized`: Not logged in
-- `500 Internal Server Error`: Server error
-
-### Update Order Status
-
-```
-PATCH /api/orders/:id/status
-```
-
-**Authentication Required:** Yes
-
-**URL Parameters:**
-- `id`: ID of the order to update
-
-**Request Body:**
-```json
-{
-  "status": "completed"
-}
-```
-
-**Response (200 OK):**
-```json
-{
-  "id": 3,
-  "customerId": 3,
-  "userId": 1,
-  "franchiseId": 1,
-  "total": 143.92,
-  "status": "completed",
-  "orderDate": "2023-06-20T10:00:00Z",
-  "createdAt": "2023-06-20T10:00:00Z",
-  "updatedAt": "2023-06-20T11:15:00Z"
-}
-```
-
-**Possible Errors:**
-- `400 Bad Request`: Invalid status
-- `401 Unauthorized`: Not logged in
-- `404 Not Found`: Order not found
-- `500 Internal Server Error`: Server error
-
-### Get Order Details
-
-```
-GET /api/orders/:id/details
-```
-
-**Authentication Required:** Yes
-
-**URL Parameters:**
-- `id`: ID of the order to retrieve details for
-
-**Response (200 OK):**
-```json
-{
-  "order": {
-    "id": 3,
-    "customerId": 3,
-    "userId": 1,
-    "franchiseId": 1,
-    "total": 143.92,
-    "status": "completed",
-    "orderDate": "2023-06-20T10:00:00Z",
-    "createdAt": "2023-06-20T10:00:00Z",
-    "updatedAt": "2023-06-20T11:15:00Z"
-  },
-  "customer": {
-    "id": 3,
-    "firstName": "Ananya",
-    "lastName": "Patel",
-    "email": "ananya.patel@example.com",
-    "phone": "+91 9876123459",
-    "address": "124 Urban Heights, Mumbai"
-  },
-  "items": [
-    {
-      "id": 5,
-      "productId": 1,
-      "productName": "Paracetamol 500mg",
-      "quantity": 2,
-      "price": 45.00,
-      "gstRate": 12.00,
-      "gstAmount": 10.80,
-      "total": 100.80
-    },
-    {
-      "id": 6,
-      "productId": 3,
-      "productName": "Cetrizine 10mg",
-      "quantity": 1,
-      "price": 38.50,
-      "gstRate": 5.00,
-      "gstAmount": 1.93,
-      "total": 40.43
-    }
-  ],
-  "user": {
-    "id": 1,
-    "firstName": "John",
-    "lastName": "Doe"
-  },
-  "franchise": {
-    "id": 1,
-    "name": "Main Branch"
-  }
-}
-```
-
-**Possible Errors:**
-- `404 Not Found`: Order not found
-
-### Get Recent Orders
-
-```
-GET /api/orders/recent?limit=5
-```
-
-**Authentication Required:** Yes
-
-**Query Parameters:**
-- `limit` (optional): Maximum number of orders to return (default: 5)
-- `franchiseId` (optional): Filter by franchise
-
-**Response (200 OK):**
-```json
-[
-  {
-    "id": 3,
-    "customerId": 3,
-    "customerName": "Ananya Patel",
-    "userId": 1,
-    "userName": "John Doe",
-    "franchiseId": 1,
-    "total": 143.92,
-    "status": "completed",
-    "orderDate": "2023-06-20T10:00:00Z",
-    "createdAt": "2023-06-20T10:00:00Z",
-    "updatedAt": "2023-06-20T11:15:00Z"
-  },
-  {
-    "id": 2,
-    "customerId": 2,
-    "customerName": "Priya Sharma",
-    "userId": 1,
-    "userName": "John Doe",
-    "franchiseId": 1,
-    "total": 134.40,
-    "status": "processing",
-    "orderDate": "2023-06-10T15:00:00Z",
-    "createdAt": "2023-06-10T15:00:00Z",
-    "updatedAt": "2023-06-10T15:10:00Z"
-  }
-]
-```
-
-## Inventory Management
-
-### Get Inventory by Franchise
-
-```
-GET /api/inventory?franchiseId=1
-```
-
-**Authentication Required:** Yes
-
-**Query Parameters:**
-- `franchiseId`: ID of the franchise to get inventory for
-
-**Response (200 OK):**
-```json
-[
-  {
-    "id": 1,
-    "productId": 1,
-    "franchiseId": 1,
-    "quantity": 75,
-    "product": {
-      "id": 1,
-      "name": "Paracetamol 500mg",
-      "description": "Pain reliever and fever reducer",
-      "manufacturer": "ABC Pharmaceuticals",
-      "category": "Analgesics",
-      "price": 45.00,
-      "gstRate": 12.00,
-      "reorderLevel": 50
-    },
-    "createdAt": "2023-05-15T10:00:00Z",
-    "updatedAt": "2023-06-20T11:15:00Z"
-  },
-  {
-    "id": 2,
-    "productId": 2,
-    "franchiseId": 1,
-    "quantity": 25,
-    "product": {
-      "id": 2,
-      "name": "Amoxicillin 250mg",
-      "description": "Antibiotic medication",
-      "manufacturer": "XYZ Pharma",
-      "category": "Antibiotics",
-      "price": 120.00,
-      "gstRate": 5.00,
-      "reorderLevel": 30
-    },
-    "createdAt": "2023-05-15T10:30:00Z",
-    "updatedAt": "2023-06-10T15:10:00Z"
-  }
-]
-```
-
-**Possible Errors:**
-- `400 Bad Request`: Missing franchiseId
-
-### Update Inventory
-
-```
-PATCH /api/inventory
-```
-
-**Authentication Required:** Yes
-
-**Request Body:**
-```json
-{
-  "franchiseId": 1,
-  "productId": 2,
-  "quantity": 40
-}
-```
-
-**Response (200 OK):**
 ```json
 {
   "id": 2,
-  "productId": 2,
-  "franchiseId": 1,
-  "quantity": 40,
-  "createdAt": "2023-05-15T10:30:00Z",
-  "updatedAt": "2023-06-25T09:45:00Z"
+  "name": "New Branch",
+  "address": "456 Pharmacy Road, Mumbai",
+  "contact_number": "+91 9876543211",
+  "email": "mumbai@medsync.com",
+  "is_active": true,
+  "created_at": "2023-01-01T00:00:00.000Z",
+  "updated_at": "2023-01-01T00:00:00.000Z"
 }
 ```
 
-**Possible Errors:**
-- `400 Bad Request`: Invalid input
-- `401 Unauthorized`: Not logged in
-- `404 Not Found`: Inventory not found
-- `500 Internal Server Error`: Server error
+### Update a franchise
 
-## Dashboard Statistics
+- **URL**: `/api/franchises/:id`
+- **Method**: `PATCH`
+- **Auth required**: Yes
+- **Permissions required**: Admin
+- **URL Parameters**: id=[integer] franchise ID
 
-### Get Dashboard Statistics
+**Request Body:**
 
-```
-GET /api/dashboard/stats?franchiseId=1
-```
-
-**Authentication Required:** Yes
-
-**Query Parameters:**
-- `franchiseId` (optional): Get stats for a specific franchise
-
-**Response (200 OK):**
 ```json
 {
-  "totalOrders": 3,
-  "revenue": 519.12,
-  "customers": 3,
-  "lowStockItems": 1,
-  "recentOrders": [
+  "name": "Updated Branch Name",
+  "contact_number": "+91 9876543212"
+}
+```
+
+**Success Response:**
+
+- **Code**: 200 OK
+- **Content**:
+
+```json
+{
+  "id": 2,
+  "name": "Updated Branch Name",
+  "address": "456 Pharmacy Road, Mumbai",
+  "contact_number": "+91 9876543212",
+  "email": "mumbai@medsync.com",
+  "is_active": true,
+  "created_at": "2023-01-01T00:00:00.000Z",
+  "updated_at": "2023-01-01T00:00:00.000Z"
+}
+```
+
+**Error Response:**
+
+- **Code**: 404 Not Found
+- **Content**:
+
+```json
+{
+  "error": "Franchise not found"
+}
+```
+
+## Products
+
+### Get all products
+
+- **URL**: `/api/products`
+- **Method**: `GET`
+- **Auth required**: Yes
+- **Permissions required**: None
+
+**Success Response:**
+
+- **Code**: 200 OK
+- **Content**:
+
+```json
+[
+  {
+    "id": 1,
+    "category": "Antibiotics",
+    "manufacturer": "Sun Pharma",
+    "name": "Azithromycin 500mg",
+    "packing": "10 tablets",
+    "mrp": 150.50,
+    "case_pack": 10,
+    "composition": "Azithromycin 500mg",
+    "gst": 12.00,
+    "discount": 10.00,
+    "stock_quantity": 100,
+    "expiry_date": "2024-12-31",
+    "prescription_required": true,
+    "supplier": "ABC Medical Suppliers"
+  }
+]
+```
+
+### Get a specific product
+
+- **URL**: `/api/products/:id`
+- **Method**: `GET`
+- **Auth required**: Yes
+- **Permissions required**: None
+- **URL Parameters**: id=[integer] product ID
+
+**Success Response:**
+
+- **Code**: 200 OK
+- **Content**:
+
+```json
+{
+  "id": 1,
+  "category": "Antibiotics",
+  "manufacturer": "Sun Pharma",
+  "name": "Azithromycin 500mg",
+  "packing": "10 tablets",
+  "mrp": 150.50,
+  "case_pack": 10,
+  "composition": "Azithromycin 500mg",
+  "gst": 12.00,
+  "discount": 10.00,
+  "stock_quantity": 100,
+  "expiry_date": "2024-12-31",
+  "prescription_required": true,
+  "supplier": "ABC Medical Suppliers"
+}
+```
+
+**Error Response:**
+
+- **Code**: 404 Not Found
+- **Content**:
+
+```json
+{
+  "error": "Product not found"
+}
+```
+
+### Create a product
+
+- **URL**: `/api/products`
+- **Method**: `POST`
+- **Auth required**: Yes
+- **Permissions required**: Manager, Admin
+
+**Request Body:**
+
+```json
+{
+  "category": "Pain Relief",
+  "manufacturer": "Cipla",
+  "name": "Paracetamol 500mg",
+  "packing": "15 tablets",
+  "mrp": 35.00,
+  "case_pack": 24,
+  "composition": "Paracetamol 500mg",
+  "gst": 5.00,
+  "discount": 5.00,
+  "stock_quantity": 200,
+  "expiry_date": "2025-06-30",
+  "prescription_required": false,
+  "supplier": "XYZ Pharmaceuticals"
+}
+```
+
+**Success Response:**
+
+- **Code**: 201 Created
+- **Content**:
+
+```json
+{
+  "id": 2,
+  "category": "Pain Relief",
+  "manufacturer": "Cipla",
+  "name": "Paracetamol 500mg",
+  "packing": "15 tablets",
+  "mrp": 35.00,
+  "case_pack": 24,
+  "composition": "Paracetamol 500mg",
+  "gst": 5.00,
+  "discount": 5.00,
+  "stock_quantity": 200,
+  "expiry_date": "2025-06-30",
+  "prescription_required": false,
+  "supplier": "XYZ Pharmaceuticals"
+}
+```
+
+### Update a product
+
+- **URL**: `/api/products/:id`
+- **Method**: `PATCH`
+- **Auth required**: Yes
+- **Permissions required**: Manager, Admin
+- **URL Parameters**: id=[integer] product ID
+
+**Request Body:**
+
+```json
+{
+  "mrp": 40.00,
+  "discount": 7.50,
+  "stock_quantity": 180
+}
+```
+
+**Success Response:**
+
+- **Code**: 200 OK
+- **Content**:
+
+```json
+{
+  "id": 2,
+  "category": "Pain Relief",
+  "manufacturer": "Cipla",
+  "name": "Paracetamol 500mg",
+  "packing": "15 tablets",
+  "mrp": 40.00,
+  "case_pack": 24,
+  "composition": "Paracetamol 500mg",
+  "gst": 5.00,
+  "discount": 7.50,
+  "stock_quantity": 180,
+  "expiry_date": "2025-06-30",
+  "prescription_required": false,
+  "supplier": "XYZ Pharmaceuticals"
+}
+```
+
+**Error Response:**
+
+- **Code**: 404 Not Found
+- **Content**:
+
+```json
+{
+  "error": "Product not found"
+}
+```
+
+### Delete a product
+
+- **URL**: `/api/products/:id`
+- **Method**: `DELETE`
+- **Auth required**: Yes
+- **Permissions required**: Admin
+- **URL Parameters**: id=[integer] product ID
+
+**Success Response:**
+
+- **Code**: 200 OK
+- **Content**:
+
+```json
+{
+  "success": true
+}
+```
+
+**Error Response:**
+
+- **Code**: 404 Not Found
+- **Content**:
+
+```json
+{
+  "error": "Product not found"
+}
+```
+
+### Get low stock products
+
+- **URL**: `/api/products/low-stock`
+- **Method**: `GET`
+- **Auth required**: Yes
+- **Permissions required**: None
+- **Query Parameters**: limit=[integer] optional, default=10
+
+**Success Response:**
+
+- **Code**: 200 OK
+- **Content**:
+
+```json
+[
+  {
+    "id": 3,
+    "category": "Cardiovascular",
+    "manufacturer": "Dr. Reddy's",
+    "name": "Atorvastatin 10mg",
+    "packing": "10 tablets",
+    "mrp": 85.00,
+    "case_pack": 12,
+    "composition": "Atorvastatin 10mg",
+    "gst": 12.00,
+    "discount": 8.00,
+    "stock_quantity": 8,
+    "expiry_date": "2025-03-15",
+    "prescription_required": true,
+    "supplier": "Medical Distributors Ltd"
+  }
+]
+```
+
+## Customers
+
+### Get all customers
+
+- **URL**: `/api/customers`
+- **Method**: `GET`
+- **Auth required**: Yes
+- **Permissions required**: None
+
+**Success Response:**
+
+- **Code**: 200 OK
+- **Content**:
+
+```json
+[
+  {
+    "id": 1,
+    "franchise_id": 1,
+    "first_name": "Rajesh",
+    "last_name": "Kumar",
+    "address": "789 Customer Street, New Delhi",
+    "contact_number": "+91 9876543220",
+    "email": "rajesh.kumar@example.com",
+    "created_at": "2023-01-15T00:00:00.000Z",
+    "updated_at": "2023-01-15T00:00:00.000Z"
+  }
+]
+```
+
+### Get a specific customer
+
+- **URL**: `/api/customers/:id`
+- **Method**: `GET`
+- **Auth required**: Yes
+- **Permissions required**: None
+- **URL Parameters**: id=[integer] customer ID
+
+**Success Response:**
+
+- **Code**: 200 OK
+- **Content**:
+
+```json
+{
+  "id": 1,
+  "franchise_id": 1,
+  "first_name": "Rajesh",
+  "last_name": "Kumar",
+  "address": "789 Customer Street, New Delhi",
+  "contact_number": "+91 9876543220",
+  "email": "rajesh.kumar@example.com",
+  "created_at": "2023-01-15T00:00:00.000Z",
+  "updated_at": "2023-01-15T00:00:00.000Z"
+}
+```
+
+**Error Response:**
+
+- **Code**: 404 Not Found
+- **Content**:
+
+```json
+{
+  "error": "Customer not found"
+}
+```
+
+### Create a customer
+
+- **URL**: `/api/customers`
+- **Method**: `POST`
+- **Auth required**: Yes
+- **Permissions required**: None
+
+**Request Body:**
+
+```json
+{
+  "franchise_id": 1,
+  "first_name": "Priya",
+  "last_name": "Sharma",
+  "address": "101 Residential Colony, Bangalore",
+  "contact_number": "+91 9876543221",
+  "email": "priya.sharma@example.com"
+}
+```
+
+**Success Response:**
+
+- **Code**: 201 Created
+- **Content**:
+
+```json
+{
+  "id": 2,
+  "franchise_id": 1,
+  "first_name": "Priya",
+  "last_name": "Sharma",
+  "address": "101 Residential Colony, Bangalore",
+  "contact_number": "+91 9876543221",
+  "email": "priya.sharma@example.com",
+  "created_at": "2023-01-16T00:00:00.000Z",
+  "updated_at": "2023-01-16T00:00:00.000Z"
+}
+```
+
+### Update a customer
+
+- **URL**: `/api/customers/:id`
+- **Method**: `PATCH`
+- **Auth required**: Yes
+- **Permissions required**: None
+- **URL Parameters**: id=[integer] customer ID
+
+**Request Body:**
+
+```json
+{
+  "address": "New Address, Bangalore",
+  "contact_number": "+91 9876543222"
+}
+```
+
+**Success Response:**
+
+- **Code**: 200 OK
+- **Content**:
+
+```json
+{
+  "id": 2,
+  "franchise_id": 1,
+  "first_name": "Priya",
+  "last_name": "Sharma",
+  "address": "New Address, Bangalore",
+  "contact_number": "+91 9876543222",
+  "email": "priya.sharma@example.com",
+  "created_at": "2023-01-16T00:00:00.000Z",
+  "updated_at": "2023-01-16T00:00:00.000Z"
+}
+```
+
+**Error Response:**
+
+- **Code**: 404 Not Found
+- **Content**:
+
+```json
+{
+  "error": "Customer not found"
+}
+```
+
+### Delete a customer
+
+- **URL**: `/api/customers/:id`
+- **Method**: `DELETE`
+- **Auth required**: Yes
+- **Permissions required**: Manager, Admin
+- **URL Parameters**: id=[integer] customer ID
+
+**Success Response:**
+
+- **Code**: 200 OK
+- **Content**:
+
+```json
+{
+  "success": true
+}
+```
+
+**Error Response:**
+
+- **Code**: 404 Not Found
+- **Content**:
+
+```json
+{
+  "error": "Customer not found"
+}
+```
+
+### Get recent customers
+
+- **URL**: `/api/customers/recent`
+- **Method**: `GET`
+- **Auth required**: Yes
+- **Permissions required**: None
+- **Query Parameters**: limit=[integer] optional, default=5
+
+**Success Response:**
+
+- **Code**: 200 OK
+- **Content**:
+
+```json
+[
+  {
+    "id": 3,
+    "franchise_id": 1,
+    "first_name": "Amit",
+    "last_name": "Patel",
+    "address": "555 New Street, Mumbai",
+    "contact_number": "+91 9876543223",
+    "email": "amit.patel@example.com",
+    "created_at": "2023-01-17T00:00:00.000Z",
+    "updated_at": "2023-01-17T00:00:00.000Z"
+  },
+  {
+    "id": 2,
+    "franchise_id": 1,
+    "first_name": "Priya",
+    "last_name": "Sharma",
+    "address": "New Address, Bangalore",
+    "contact_number": "+91 9876543222",
+    "email": "priya.sharma@example.com",
+    "created_at": "2023-01-16T00:00:00.000Z",
+    "updated_at": "2023-01-16T00:00:00.000Z"
+  }
+]
+```
+
+## Orders
+
+### Get all orders
+
+- **URL**: `/api/orders`
+- **Method**: `GET`
+- **Auth required**: Yes
+- **Permissions required**: None
+
+**Success Response:**
+
+- **Code**: 200 OK
+- **Content**:
+
+```json
+[
+  {
+    "id": 1,
+    "order_number": "ORD-20230120-001",
+    "franchise_id": 1,
+    "customer_id": 1,
+    "status": "completed",
+    "total_amount": 450.00,
+    "discount_amount": 45.00,
+    "tax_amount": 54.00,
+    "final_amount": 459.00,
+    "notes": "Regular customer order",
+    "created_at": "2023-01-20T00:00:00.000Z",
+    "updated_at": "2023-01-20T00:00:00.000Z"
+  }
+]
+```
+
+### Get a specific order
+
+- **URL**: `/api/orders/:id`
+- **Method**: `GET`
+- **Auth required**: Yes
+- **Permissions required**: None
+- **URL Parameters**: id=[integer] order ID
+
+**Success Response:**
+
+- **Code**: 200 OK
+- **Content**:
+
+```json
+{
+  "id": 1,
+  "order_number": "ORD-20230120-001",
+  "franchise_id": 1,
+  "customer_id": 1,
+  "status": "completed",
+  "total_amount": 450.00,
+  "discount_amount": 45.00,
+  "tax_amount": 54.00,
+  "final_amount": 459.00,
+  "notes": "Regular customer order",
+  "created_at": "2023-01-20T00:00:00.000Z",
+  "updated_at": "2023-01-20T00:00:00.000Z"
+}
+```
+
+**Error Response:**
+
+- **Code**: 404 Not Found
+- **Content**:
+
+```json
+{
+  "error": "Order not found"
+}
+```
+
+### Create an order
+
+- **URL**: `/api/orders`
+- **Method**: `POST`
+- **Auth required**: Yes
+- **Permissions required**: None
+
+**Request Body:**
+
+```json
+{
+  "franchise_id": 1,
+  "customer_id": 2,
+  "status": "pending",
+  "notes": "Priority delivery",
+  "items": [
     {
-      "id": 3,
-      "customerName": "Ananya Patel",
-      "total": 143.92,
-      "status": "completed",
-      "orderDate": "2023-06-20T10:00:00Z"
+      "product_id": 1,
+      "quantity": 2,
+      "unit_price": 150.50,
+      "discount": 10.00,
+      "tax_rate": 12.00
     },
     {
+      "product_id": 2,
+      "quantity": 1,
+      "unit_price": 35.00,
+      "discount": 5.00,
+      "tax_rate": 5.00
+    }
+  ]
+}
+```
+
+**Success Response:**
+
+- **Code**: 201 Created
+- **Content**:
+
+```json
+{
+  "id": 2,
+  "order_number": "ORD-20230121-001",
+  "franchise_id": 1,
+  "customer_id": 2,
+  "status": "pending",
+  "total_amount": 336.00,
+  "discount_amount": 33.10,
+  "tax_amount": 37.26,
+  "final_amount": 340.16,
+  "notes": "Priority delivery",
+  "created_at": "2023-01-21T00:00:00.000Z",
+  "updated_at": "2023-01-21T00:00:00.000Z"
+}
+```
+
+### Update an order status
+
+- **URL**: `/api/orders/:id/status`
+- **Method**: `PATCH`
+- **Auth required**: Yes
+- **Permissions required**: None
+- **URL Parameters**: id=[integer] order ID
+
+**Request Body:**
+
+```json
+{
+  "status": "shipped"
+}
+```
+
+**Success Response:**
+
+- **Code**: 200 OK
+- **Content**:
+
+```json
+{
+  "id": 2,
+  "order_number": "ORD-20230121-001",
+  "franchise_id": 1,
+  "customer_id": 2,
+  "status": "shipped",
+  "total_amount": 336.00,
+  "discount_amount": 33.10,
+  "tax_amount": 37.26,
+  "final_amount": 340.16,
+  "notes": "Priority delivery",
+  "created_at": "2023-01-21T00:00:00.000Z",
+  "updated_at": "2023-01-21T12:30:00.000Z"
+}
+```
+
+**Error Response:**
+
+- **Code**: 404 Not Found
+- **Content**:
+
+```json
+{
+  "error": "Order not found"
+}
+```
+
+### Get order details with items
+
+- **URL**: `/api/orders/:id/details`
+- **Method**: `GET`
+- **Auth required**: Yes
+- **Permissions required**: None
+- **URL Parameters**: id=[integer] order ID
+
+**Success Response:**
+
+- **Code**: 200 OK
+- **Content**:
+
+```json
+{
+  "order": {
+    "id": 2,
+    "order_number": "ORD-20230121-001",
+    "franchise_id": 1,
+    "customer_id": 2,
+    "status": "shipped",
+    "total_amount": 336.00,
+    "discount_amount": 33.10,
+    "tax_amount": 37.26,
+    "final_amount": 340.16,
+    "notes": "Priority delivery",
+    "created_at": "2023-01-21T00:00:00.000Z",
+    "updated_at": "2023-01-21T12:30:00.000Z"
+  },
+  "customer": {
+    "id": 2,
+    "first_name": "Priya",
+    "last_name": "Sharma",
+    "address": "New Address, Bangalore",
+    "contact_number": "+91 9876543222",
+    "email": "priya.sharma@example.com"
+  },
+  "items": [
+    {
+      "id": 3,
+      "order_id": 2,
+      "product_id": 1,
+      "quantity": 2,
+      "unit_price": 150.50,
+      "discount": 10.00,
+      "tax_rate": 12.00,
+      "tax_amount": 32.51,
+      "total_amount": 303.01,
+      "product": {
+        "id": 1,
+        "name": "Azithromycin 500mg",
+        "manufacturer": "Sun Pharma",
+        "packing": "10 tablets"
+      }
+    },
+    {
+      "id": 4,
+      "order_id": 2,
+      "product_id": 2,
+      "quantity": 1,
+      "unit_price": 35.00,
+      "discount": 5.00,
+      "tax_rate": 5.00,
+      "tax_amount": 1.66,
+      "total_amount": 34.91,
+      "product": {
+        "id": 2,
+        "name": "Paracetamol 500mg",
+        "manufacturer": "Cipla",
+        "packing": "15 tablets"
+      }
+    }
+  ]
+}
+```
+
+**Error Response:**
+
+- **Code**: 404 Not Found
+- **Content**:
+
+```json
+{
+  "error": "Order not found"
+}
+```
+
+### Get recent orders
+
+- **URL**: `/api/orders/recent`
+- **Method**: `GET`
+- **Auth required**: Yes
+- **Permissions required**: None
+- **Query Parameters**: limit=[integer] optional, default=5
+
+**Success Response:**
+
+- **Code**: 200 OK
+- **Content**:
+
+```json
+[
+  {
+    "id": 2,
+    "order_number": "ORD-20230121-001",
+    "franchise_id": 1,
+    "customer_id": 2,
+    "status": "shipped",
+    "total_amount": 336.00,
+    "discount_amount": 33.10,
+    "tax_amount": 37.26,
+    "final_amount": 340.16,
+    "notes": "Priority delivery",
+    "created_at": "2023-01-21T00:00:00.000Z",
+    "updated_at": "2023-01-21T12:30:00.000Z",
+    "customer": {
       "id": 2,
-      "customerName": "Priya Sharma",
-      "total": 134.40,
-      "status": "processing",
-      "orderDate": "2023-06-10T15:00:00Z"
+      "first_name": "Priya",
+      "last_name": "Sharma"
+    }
+  },
+  {
+    "id": 1,
+    "order_number": "ORD-20230120-001",
+    "franchise_id": 1,
+    "customer_id": 1,
+    "status": "completed",
+    "total_amount": 450.00,
+    "discount_amount": 45.00,
+    "tax_amount": 54.00,
+    "final_amount": 459.00,
+    "notes": "Regular customer order",
+    "created_at": "2023-01-20T00:00:00.000Z",
+    "updated_at": "2023-01-20T00:00:00.000Z",
+    "customer": {
+      "id": 1,
+      "first_name": "Rajesh",
+      "last_name": "Kumar"
+    }
+  }
+]
+```
+
+## Inventory
+
+### Get inventory by franchise
+
+- **URL**: `/api/inventory/:franchiseId`
+- **Method**: `GET`
+- **Auth required**: Yes
+- **Permissions required**: None
+- **URL Parameters**: franchiseId=[integer] franchise ID
+
+**Success Response:**
+
+- **Code**: 200 OK
+- **Content**:
+
+```json
+[
+  {
+    "id": 1,
+    "franchise_id": 1,
+    "product_id": 1,
+    "stock_quantity": 95,
+    "created_at": "2023-01-01T00:00:00.000Z",
+    "updated_at": "2023-01-21T00:00:00.000Z",
+    "product": {
+      "id": 1,
+      "name": "Azithromycin 500mg",
+      "manufacturer": "Sun Pharma",
+      "category": "Antibiotics",
+      "mrp": 150.50,
+      "expiry_date": "2024-12-31"
+    }
+  },
+  {
+    "id": 2,
+    "franchise_id": 1,
+    "product_id": 2,
+    "stock_quantity": 199,
+    "created_at": "2023-01-01T00:00:00.000Z",
+    "updated_at": "2023-01-21T00:00:00.000Z",
+    "product": {
+      "id": 2,
+      "name": "Paracetamol 500mg",
+      "manufacturer": "Cipla",
+      "category": "Pain Relief",
+      "mrp": 35.00,
+      "expiry_date": "2025-06-30"
+    }
+  }
+]
+```
+
+### Update inventory
+
+- **URL**: `/api/inventory/:franchiseId/:productId`
+- **Method**: `PATCH`
+- **Auth required**: Yes
+- **Permissions required**: Manager, Admin
+- **URL Parameters**: 
+  - franchiseId=[integer] franchise ID
+  - productId=[integer] product ID
+
+**Request Body:**
+
+```json
+{
+  "stock_quantity": 90
+}
+```
+
+**Success Response:**
+
+- **Code**: 200 OK
+- **Content**:
+
+```json
+{
+  "id": 1,
+  "franchise_id": 1,
+  "product_id": 1,
+  "stock_quantity": 90,
+  "created_at": "2023-01-01T00:00:00.000Z",
+  "updated_at": "2023-01-22T00:00:00.000Z"
+}
+```
+
+**Error Response:**
+
+- **Code**: 404 Not Found
+- **Content**:
+
+```json
+{
+  "error": "Inventory record not found"
+}
+```
+
+## Dashboard
+
+### Get dashboard statistics
+
+- **URL**: `/api/dashboard/stats`
+- **Method**: `GET`
+- **Auth required**: Yes
+- **Permissions required**: None
+- **Query Parameters**: franchiseId=[integer] optional, specific franchise ID
+
+**Success Response:**
+
+- **Code**: 200 OK
+- **Content**:
+
+```json
+{
+  "totalOrders": 25,
+  "revenue": 12500.75,
+  "customers": 15,
+  "lowStockItems": 3,
+  "recentOrders": [
+    {
+      "id": 2,
+      "order_number": "ORD-20230121-001",
+      "customer": {
+        "first_name": "Priya",
+        "last_name": "Sharma"
+      },
+      "status": "shipped",
+      "final_amount": 340.16,
+      "created_at": "2023-01-21T00:00:00.000Z"
     }
   ],
   "recentCustomers": [
     {
       "id": 3,
-      "name": "Ananya Patel",
-      "phone": "+91 9876123459"
-    },
-    {
-      "id": 2,
-      "name": "Priya Sharma",
-      "phone": "+91 9876123457"
+      "first_name": "Amit",
+      "last_name": "Patel",
+      "contact_number": "+91 9876543223",
+      "created_at": "2023-01-17T00:00:00.000Z"
     }
   ],
   "lowStockProducts": [
     {
-      "id": 2,
-      "name": "Amoxicillin 250mg",
-      "quantity": 25,
-      "reorderLevel": 30
+      "id": 3,
+      "name": "Atorvastatin 10mg",
+      "stock_quantity": 8,
+      "manufacturer": "Dr. Reddy's"
     }
   ]
 }
 ```
 
-**Possible Errors:**
-- `401 Unauthorized`: Not logged in
-- `500 Internal Server Error`: Server error
+## Error Codes
 
-## Error Responses
+| Code | Meaning |
+|------|---------|
+| 400 | Bad Request – Your request has validation errors |
+| 401 | Unauthorized – You need to authenticate first |
+| 403 | Forbidden – You don't have permission to access this resource |
+| 404 | Not Found – The specified resource could not be found |
+| 409 | Conflict – The request conflicts with current state of the server |
+| 422 | Unprocessable Entity – Unable to process the contained instructions |
+| 429 | Too Many Requests – You're sending too many requests too quickly |
+| 500 | Internal Server Error – We had a problem with our server |
 
-All API endpoints use standard HTTP status codes and return error messages in a consistent format:
+## Notes
 
-```json
-{
-  "error": "Error message describing what went wrong"
-}
-```
-
-Common status codes:
-
-- `400 Bad Request`: The request was invalid or cannot be served
-- `401 Unauthorized`: Authentication is required or failed
-- `403 Forbidden`: The authenticated user doesn't have permission
-- `404 Not Found`: The requested resource doesn't exist
-- `500 Internal Server Error`: An error occurred on the server
-
-## Pagination
-
-For endpoints that return potentially large lists, pagination is supported using query parameters:
-
-- `page`: Page number (starting from 1)
-- `limit`: Number of items per page
-
-Example:
-```
-GET /api/products?page=2&limit=20
-```
-
-The response includes pagination metadata:
-
-```json
-{
-  "data": [...],
-  "pagination": {
-    "totalItems": 45,
-    "itemsPerPage": 20,
-    "currentPage": 2,
-    "totalPages": 3
-  }
-}
-```
-
-## GST Implementation
-
-All products include GST information in accordance with Indian tax regulations:
-
-- `gstRate`: The GST percentage rate applicable to the product
-- `hsnCode`: The Harmonized System Nomenclature code for GST classification
-- Price calculations include GST in the final amount
-
-## Rate Limiting
-
-API endpoints are subject to rate limiting to prevent abuse:
-
-- 100 requests per minute for authenticated users
-- 20 requests per minute for unauthenticated requests
-
-When the rate limit is exceeded, the API responds with:
-
-```
-429 Too Many Requests
-```
-
-And headers:
-```
-X-RateLimit-Limit: 100
-X-RateLimit-Remaining: 0
-X-RateLimit-Reset: 1623456789
-```
+1. All successful requests return a status code of 200 (OK) or 201 (Created).
+2. All error responses include an error message in the response body.
+3. Authentication is managed via session cookies.
+4. All timestamp fields are in ISO 8601 format (YYYY-MM-DDTHH:MM:SS.sssZ).
+5. All currency amounts are in Indian Rupees (₹).
