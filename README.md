@@ -2,7 +2,6 @@
 
 A comprehensive medicine ordering and inventory management system tailored for pharmacies in India.
 
-![MedSync Logo](/client/public/logo.svg)
 
 ## Overview
 
