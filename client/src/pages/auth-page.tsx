@@ -35,8 +35,12 @@ const loginFormSchema = z.object({
 const registrationFormSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  fullName: z.string().min(1, "Full name is required"),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  email: z.string().email("Please enter a valid email address"),
   role: z.string().default("staff"),
+  franchiseId: z.number().optional().nullable(),
+  isActive: z.boolean().default(true),
 });
 
 export default function AuthPage() {
@@ -66,8 +70,12 @@ export default function AuthPage() {
     defaultValues: {
       username: "",
       password: "",
-      fullName: "",
+      firstName: "",
+      lastName: "",
+      email: "",
       role: "staff",
+      franchiseId: null,
+      isActive: true,
     },
   });
 
@@ -100,10 +108,10 @@ export default function AuthPage() {
               <h1 className="ml-3 text-2xl font-bold text-gray-900">MedSync</h1>
             </div>
             <h2 className="text-3xl font-bold tracking-tight text-gray-900">
-              Welcome to PharmaFlow
+              Welcome to MedSync
             </h2>
             <p className="mt-2 text-sm text-gray-600">
-              Your complete medicine ordering and inventory management solution
+              Your complete medicine ordering and inventory management solution for Indian pharmacies
             </p>
           </div>
 
@@ -186,22 +194,53 @@ export default function AuthPage() {
                 <CardHeader>
                   <CardTitle>Create an account</CardTitle>
                   <CardDescription>
-                    Register for access to the PharmaFlow system
+                    Register for access to the MedSync system
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Form {...registrationForm}>
                     <form onSubmit={registrationForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={registrationForm.control}
+                          name="firstName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>First Name</FormLabel>
+                              <FormControl>
+                                <div className="relative">
+                                  <User className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                                  <Input placeholder="First name" className="pl-8" {...field} />
+                                </div>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={registrationForm.control}
+                          name="lastName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Last Name</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Last name" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
                       <FormField
                         control={registrationForm.control}
-                        name="fullName"
+                        name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Full Name</FormLabel>
+                            <FormLabel>Email</FormLabel>
                             <FormControl>
                               <div className="relative">
-                                <User className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                                <Input placeholder="Your full name" className="pl-8" {...field} />
+                                <Mail className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                                <Input type="email" placeholder="Your email address" className="pl-8" {...field} />
                               </div>
                             </FormControl>
                             <FormMessage />
@@ -216,7 +255,7 @@ export default function AuthPage() {
                             <FormLabel>Username</FormLabel>
                             <FormControl>
                               <div className="relative">
-                                <Mail className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                                <User className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                                 <Input placeholder="Choose a username" className="pl-8" {...field} />
                               </div>
                             </FormControl>
@@ -265,16 +304,21 @@ export default function AuthPage() {
       <div className="flex-1 bg-primary p-8 text-white hidden md:flex md:flex-col md:justify-center">
         <div className="max-w-md mx-auto">
           <div className="mb-8">
-            <div className="w-16 h-16 rounded-md bg-white flex items-center justify-center text-primary">
-              <Pill className="h-8 w-8" />
+            <div className="w-20 h-20 rounded-md bg-white flex items-center justify-center text-primary p-3">
+              <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2L7 6V18L12 22L17 18V6L12 2Z" fill="currentColor" />
+                <path d="M12 6V12M9 9H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                <path d="M8 16H16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                <path d="M10 19H14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
             </div>
           </div>
           <h2 className="text-4xl font-bold mb-6">
-            Streamline Your Pharmacy Operations
+            Streamline Your Medical Store Operations
           </h2>
           <p className="text-lg mb-6">
-            PharmaFlow provides a comprehensive solution for managing your pharmacy's inventory, 
-            tracking customers, and processing orders efficiently.
+            MedSync provides a comprehensive solution for managing your Indian pharmacy's inventory, 
+            tracking customers, and processing orders with GST support.
           </p>
           <div className="space-y-4">
             <div className="flex items-start">
