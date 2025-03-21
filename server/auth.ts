@@ -73,6 +73,20 @@ export function setupAuth(app: Express) {
 
   app.post("/api/register", async (req, res, next) => {
     try {
+      // Create default admin if it doesn't exist
+      const adminUser = await storage.getUserByUsername('admin');
+      if (!adminUser) {
+        await storage.createUser({
+          username: 'admin',
+          password: await hashPassword('password123'),
+          email: 'admin@example.com',
+          firstName: 'Admin',
+          lastName: 'User',
+          role: 'admin',
+          isActive: true
+        });
+      }
+
       if (!req.body.username || !req.body.password || !req.body.fullName || !req.body.email) {
         return res.status(400).json({ message: "Missing required fields" });
       }
