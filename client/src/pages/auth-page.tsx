@@ -84,7 +84,12 @@ export default function AuthPage() {
   };
 
   const onRegisterSubmit = (data: z.infer<typeof registrationFormSchema>) => {
-    registerMutation.mutate(data);
+    // Create a full name by combining first and last name for the backend
+    const userData = {
+      ...data,
+      fullName: `${data.firstName} ${data.lastName}` // Add fullName for backend compatibility
+    };
+    registerMutation.mutate(userData);
   };
 
   const isLoginPending = loginMutation.isPending;
