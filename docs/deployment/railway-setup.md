@@ -1,177 +1,232 @@
-# Setting Up PostgreSQL on Railway
+# Railway PostgreSQL Setup Guide for MedSync
 
-This guide provides step-by-step instructions for setting up and configuring a PostgreSQL database on Railway.com for the MedSync application.
+This guide provides step-by-step instructions for setting up a PostgreSQL database on Railway for use with the MedSync application.
+
+## What is Railway?
+
+[Railway](https://railway.app/) is a modern application deployment platform that makes it easy to deploy and scale services, including PostgreSQL databases. It offers:
+
+- Fully managed PostgreSQL databases
+- Automatic backups
+- Built-in monitoring
+- Easy connection to other services
+- Simple environment variable management
 
 ## Prerequisites
 
-- A Railway.com account (sign up at [railway.app](https://railway.app) if you don't have one)
-- Basic understanding of PostgreSQL and database concepts
+Before setting up a Railway PostgreSQL database, ensure you have:
 
-## Step 1: Create a New Project on Railway
+1. A [Railway account](https://railway.app/) (Free tier available, requires GitHub account for sign-up)
+2. Basic understanding of PostgreSQL databases
+3. The MedSync application code ready for connection
 
-1. Log in to your Railway dashboard at [railway.app](https://railway.app)
-2. Click the "New Project" button in the dashboard
-3. Select "PostgreSQL" from the available options
-4. Railway will automatically provision a new PostgreSQL database
+## Step 1: Create a Railway Project
 
-## Step 2: Access Your Database Details
+1. Log in to your [Railway dashboard](https://railway.app/dashboard)
+2. Click on "New Project"
+3. Select "Provision PostgreSQL"
+4. Railway will automatically create a new project with a PostgreSQL database
 
-Once your PostgreSQL database is created:
+## Step 2: Access Database Credentials
 
-1. Click on the database service in your project dashboard
-2. Go to the "Connect" tab
-3. You will see your database connection details including:
-   - Connection string (for DATABASE_URL)
-   - Individual connection parameters (PGHOST, PGUSER, etc.)
+1. From your project dashboard, click on the PostgreSQL service
+2. Navigate to the "Connect" tab
+3. You'll find important connection details:
+   - Database URL (connection string)
+   - PostgreSQL Host
+   - PostgreSQL Port
+   - PostgreSQL Username
+   - PostgreSQL Password
+   - PostgreSQL Database Name
 
-![Railway Database Details](../assets/railway-connection-details.png)
+## Step 3: Secure Your Database
 
-## Step 3: Configure Database Access
+1. Navigate to the "Settings" tab of your PostgreSQL service
+2. Under "IP Allowlist", consider adding your IP address for local development
+3. For production, add Vercel's IP ranges if deploying there
 
-By default, Railway databases are protected by IP allowlisting. You can configure this in the settings:
+## Step 4: Connect MedSync to Railway
 
-1. In your database dashboard, go to the "Settings" tab
-2. Scroll to the "Network" section
-3. Choose one of the following options:
-   - **Public**: Allow connections from anywhere (not recommended for production)
-   - **Private Networking**: Add specific IP addresses that can connect
+There are two ways to connect your application to the Railway database:
 
-## Step 4: Set Up Database Schema
+### Option 1: Using Environment Variables
 
-You need to create the database schema required by MedSync. You have two options:
-
-### Option A: Using Drizzle ORM (Recommended)
-
-1. Set the `DATABASE_URL` environment variable in your local development environment with your Railway connection string
+1. Copy the `DATABASE_URL` connection string from Railway
+2. Add it to your application's environment variables:
+   
+   For local development, add to your `.env` file:
    ```
-   export DATABASE_URL=postgresql://postgres:password@host:port/railway
+   DATABASE_URL=postgresql://username:password@host:port/database
    ```
-2. Run the Drizzle schema migration:
+   
+   For Vercel deployment, add as an environment variable in your Vercel project settings
+
+### Option 2: Using Individual Connection Parameters
+
+For more granular control, you can use individual connection parameters:
+
+```
+PGHOST=your-railway-host.railway.app
+PGPORT=5432
+PGUSER=postgres
+PGPASSWORD=your-password
+PGDATABASE=railway
+```
+
+## Step 5: Initialize the Database Schema
+
+After connecting your application to the Railway database:
+
+1. Run the database migration script to set up the schema:
    ```bash
    npm run db:push
    ```
 
-### Option B: Using the Railway SQL Editor
+2. Verify the schema was created correctly by checking in Railway:
+   - Go to the "Data" tab in your PostgreSQL service
+   - You should see all the tables defined in your schema
 
-1. In your Railway database dashboard, click on the "SQL Editor" tab
-2. Paste the contents of the SQL schema file from the project's attached assets:
-   ```sql
-   -- Create franchises table
-   CREATE TABLE franchises (
-     id SERIAL PRIMARY KEY,
-     name TEXT NOT NULL,
-     address TEXT NOT NULL,
-     contact_number TEXT NOT NULL,
-     email TEXT NOT NULL,
-     is_active BOOLEAN DEFAULT true,
-     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-   );
+## Step 6: Database Management
 
-   -- Create users table
-   CREATE TABLE users (
-     id SERIAL PRIMARY KEY,
-     first_name TEXT NOT NULL,
-     last_name TEXT NOT NULL,
-     username TEXT NOT NULL UNIQUE,
-     password TEXT NOT NULL,
-     email TEXT NOT NULL UNIQUE,
-     role TEXT NOT NULL DEFAULT 'staff',
-     franchise_id INTEGER REFERENCES franchises(id),
-     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-     last_login TIMESTAMP,
-     is_active BOOLEAN DEFAULT true
-   );
-   
-   -- Additional tables for products, customers, orders, etc.
-   -- Full schema available in the project SQL file
-   ```
-3. Click "Run" to execute the SQL and create your database schema
+Railway provides several tools for managing your database:
 
-## Step 5: Create a Seed Admin User (Optional)
+### Using the Railway UI
 
-For testing purposes, you may want to create an admin user:
+1. **Exploring Data**: Use the "Data" tab to browse tables and records
+2. **Running Queries**: Use the "Query" tab to execute SQL queries
+3. **Monitoring**: View metrics in the "Metrics" tab
 
-```sql
-INSERT INTO franchises (name, address, contact_number, email, is_active)
-VALUES ('Main Branch', '123 Healthcare Street, Mumbai', '+91 9876543210', 'main@medsync.com', true);
+### Using Railway CLI
 
-INSERT INTO users (
-  first_name, 
-  last_name, 
-  username, 
-  password, 
-  email, 
-  role, 
-  franchise_id, 
-  is_active
-)
-VALUES (
-  'Admin',
-  'User',
-  'admin',
-  '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8.salt', -- password: password123
-  'admin@medsync.com',
-  'admin',
-  1,
-  true
-);
+For more advanced operations, install the Railway CLI:
+
+```bash
+npm i -g @railway/cli
 ```
 
-## Step 6: Managing Your Database
+Login and connect to your project:
 
-Railway provides several tools for ongoing database management:
-
-- **SQL Editor**: For running custom queries and database operations
-- **Metrics**: Monitor database performance and usage
-- **Backup/Restore**: Set up automated backups of your data
-- **Variables**: Manage database configuration variables
-
-## Step 7: Connect Your Application
-
-When deploying your application to Vercel or another platform, you'll need to configure the following environment variables using the values from Railway:
-
-```
-DATABASE_URL=postgresql://username:password@host:port/database
-PGHOST=your-pg-host
-PGUSER=your-pg-user
-PGPASSWORD=your-pg-password
-PGDATABASE=your-pg-database
-PGPORT=your-pg-port
+```bash
+railway login
+railway link
 ```
 
-## Troubleshooting Railway Database Connections
+Run SQL commands directly:
+
+```bash
+railway run psql -c "SELECT * FROM users LIMIT 5;"
+```
+
+Connect via psql:
+
+```bash
+railway run psql
+```
+
+## Step 7: Backup and Restore
+
+### Creating Backups
+
+Railway automatically creates daily backups of your database. To create a manual backup:
+
+1. Go to the "Backups" tab in your PostgreSQL service
+2. Click "Create Backup"
+3. Wait for the backup to complete
+
+### Downloading Backups
+
+To download a backup:
+
+1. Select the backup from the list
+2. Click "Download"
+3. The backup will be downloaded as a SQL file
+
+### Restoring from Backups
+
+To restore from a backup:
+
+1. Select the backup you want to restore
+2. Click "Restore"
+3. Confirm the restoration
+
+## Step 8: Database Scaling
+
+As your application grows, you may need to scale your database:
+
+1. Navigate to the "Settings" tab of your PostgreSQL service
+2. Under "Plan", you can upgrade to a higher tier for:
+   - More storage
+   - More connections
+   - Better performance
+   - Advanced features
+
+## Step 9: Monitoring Your Database
+
+Railway provides tools to monitor database performance:
+
+1. Go to the "Metrics" tab to view:
+   - CPU usage
+   - Memory usage
+   - Storage usage
+   - Connection count
+
+2. Set up alerts for critical metrics in the "Alerts" section
+
+## Troubleshooting Railway Database Issues
 
 ### Connection Issues
 
 If you're having trouble connecting to your Railway database:
 
-1. **Check IP Allowlisting**: Ensure your application's IP address is allowed to connect
-2. **Verify Credentials**: Double-check your connection string and credentials
-3. **Connection Limits**: Railway has connection limits on different plans, check if you're exceeding them
+1. Verify your connection string or credentials are correct
+2. Check that your IP is in the allowlist if you've restricted access
+3. Ensure your application is using TLS/SSL for the connection
+4. Verify that you haven't exceeded connection limits
 
 ### Performance Issues
 
-If your database is slow:
+If experiencing slow queries:
 
-1. Check the Metrics tab to identify potential bottlenecks
-2. Consider optimizing queries or adding indexes to frequently queried tables
-3. Upgrade your Railway plan if you need more resources
+1. Check the "Metrics" tab to see if you're approaching resource limits
+2. Review your database indexes
+3. Consider optimizing your queries
+4. Upgrade to a higher tier if needed
 
-## Railway Pricing and Plans
+### Migration Failures
 
-Railway offers several pricing tiers:
+If database migrations fail:
 
-- **Free Tier**: Limited resources, suitable for development
-- **Developer Tier**: More resources for small production applications
-- **Team/Business Tiers**: For larger applications with higher demands
+1. Check migration logs for specific errors
+2. Ensure your database user has the necessary permissions
+3. Try running migrations manually using the Railway SQL interface
 
-Check the [Railway pricing page](https://railway.app/pricing) for the most current information.
+## Railway vs. Other Database Providers
+
+| Feature | Railway | Heroku | AWS RDS | Digital Ocean |
+|---------|---------|--------|---------|---------------|
+| Ease of Setup | Very Easy | Easy | Complex | Moderate |
+| Free Tier | Yes (Limited) | No | No | No |
+| Auto Scaling | Yes | Yes | Manual | Manual |
+| Backups | Automatic | Automatic | Configurable | Manual |
+| Connection Pooling | Included | Add-on | Configurable | Add-on |
+| Performance | Good | Good | Excellent | Good |
+| Price | $$ | $$$ | $$$$ | $$ |
+
+## Railway PostgreSQL Limitations
+
+Be aware of these limitations when using Railway's PostgreSQL service:
+
+1. **Connection Limits**: Depends on your plan tier
+2. **Storage Limits**: Depends on your plan tier
+3. **Idle Database Spin-down**: On free tier, database may sleep after inactivity
+4. **Network Restrictions**: Some plans have limited outbound connectivity
+
+## Conclusion
+
+Your MedSync application should now be successfully connected to a Railway PostgreSQL database. This setup provides a reliable, scalable database solution that can grow with your application needs.
 
 ## Next Steps
 
-After setting up your PostgreSQL database on Railway, proceed to:
-
-- [Vercel Deployment Guide](./vercel-deployment.md) to deploy your application
-- [Database Schema Overview](../database/schema.md) to understand the data structure
+- [Set up automatic database migrations](../database/migrations.md)
+- [Configure Vercel for deployment](./vercel-deployment.md)
+- Explore [Railway's documentation](https://docs.railway.app/databases/postgresql) for advanced features

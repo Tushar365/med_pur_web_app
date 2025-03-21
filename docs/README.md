@@ -1,40 +1,71 @@
 # MedSync Documentation
 
-This documentation provides comprehensive guides for deploying, developing, and understanding the MedSync medicine ordering system for Indian pharmacies.
+Welcome to the MedSync documentation. This comprehensive guide provides detailed information on setting up, using, and extending the MedSync pharmacy management system.
 
-## Table of Contents
+## Documentation Sections
 
-### Deployment
-- [Railway PostgreSQL Setup](./deployment/railway-setup.md)
-- [Vercel Deployment Guide](./deployment/vercel-deployment.md)
+### Development Guides
 
-### Development
-- [Local Development Setup](./development/local-setup.md)
-- [Environment Variables Guide](./development/environment-variables.md)
+- [Local Development Setup](./development/local-setup.md) - Setting up MedSync locally
+- [Environment Variables](./development/environment-variables.md) - Configuration through environment variables
 
-### Database
-- [Database Schema Overview](./database/schema.md)
-- [Database Migrations Guide](./database/migrations.md)
+### Database Documentation
 
-### API
-- [API Endpoints Documentation](./api/endpoints.md)
+- [Database Schema Reference](./database/schema.md) - Comprehensive schema documentation
+- [Database Migrations](./database/migrations.md) - How to evolve the database schema
 
-## About MedSync
+### API Documentation
 
-MedSync is a complete medicine ordering system tailored for Indian pharmacies with support for:
+- [API Endpoints Reference](./api/endpoints.md) - Complete API documentation
 
-- Multi-franchise management
-- GST-compliant billing
-- Inventory management
-- Customer relationship management
-- Order processing
-- Comprehensive reporting and analytics
+### Deployment Guides
 
-## Tech Stack
+- [Railway PostgreSQL Setup](./deployment/railway-setup.md) - Setting up the PostgreSQL database on Railway
+- [Vercel Deployment Guide](./deployment/vercel-deployment.md) - Deploying the application to Vercel
 
-- **Frontend**: React, TailwindCSS, Shadcn UI components
-- **Backend**: Node.js with Express
+## Project Overview
+
+MedSync is a comprehensive medicine ordering and inventory management system designed specifically for pharmacies in India. Key features include:
+
+- **User Management**: Authentication and role-based access control
+- **Franchise Management**: Support for multiple pharmacy locations
+- **Inventory Management**: Track stock levels and receive low-stock alerts
+- **Customer Management**: Track customer information and purchase history
+- **Order Processing**: Create and manage orders with GST tax calculations
+- **Dashboard Analytics**: Get insights into sales, inventory, and customer trends
+
+## Technology Stack
+
+MedSync is built using modern technologies:
+
+- **Frontend**: React, TypeScript, TailwindCSS, Shadcn UI Components
+- **Backend**: Node.js, Express.js
 - **Database**: PostgreSQL
 - **ORM**: Drizzle ORM
 - **Authentication**: Passport.js
-- **Deployment**: Vercel (application) and Railway (database)
+- **State Management**: TanStack Query (React Query)
+- **Deployment**: Vercel (frontend and API), Railway (PostgreSQL)
+
+## Getting Help
+
+If you encounter issues or have questions not covered in the documentation:
+
+1. Check the troubleshooting sections in the relevant documentation
+2. Review the [GitHub repository](https://github.com/yourusername/medsync) for open issues
+3. Contact the maintenance team through the repository's issue tracker
+
+## Contributing to Documentation
+
+Contributions to this documentation are welcome:
+
+1. Fork the repository
+2. Make your changes to the relevant Markdown files
+3. Submit a pull request with a clear description of your improvements
+
+## License
+
+MedSync and its documentation are licensed under the MIT License. See the LICENSE file in the project repository for details.
+
+---
+
+*Last updated: March 21, 2025*
